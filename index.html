@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receta Médica Digital — CESS</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── LOGIN SCREEN ── */
+#login-screen {
+  display: none;
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #0f2348 0%, #1a3a6b 60%, #2d5a9e 100%);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.login-box {
+  background: white;
+  border-radius: 18px;
+  padding: 36px 28px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.4);
+  text-align: center;
+}
+.login-logo { font-size: 3rem; margin-bottom: 8px; }
+.login-title {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 1.3rem;
+  color: #0f2348;
+  margin-bottom: 4px;
+}
+.login-sub {
+  font-size: .85rem;
+  color: #5a5a5a;
+  margin-bottom: 28px;
+}
+.login-box input[type="email"] {
+  width: 100%;
+  padding: 13px 16px;
+  border: 2px solid #d4cfc2;
+  border-radius: 10px;
+  font-size: .95rem;
+  font-family: 'Source Sans 3', sans-serif;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  transition: border .2s;
+}
+.login-box input[type="email"]:focus {
+  outline: none;
+  border-color: #1a3a6b;
+}
+#btn-login {
+  width: 100%;
+  padding: 14px;
+  background: #1a3a6b;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: .95rem;
+  font-weight: 700;
+  font-family: 'Source Sans 3', sans-serif;
+  cursor: pointer;
+  transition: background .2s;
+}
+#btn-login:hover { background: #0f2348; }
+#btn-login:disabled { opacity: .6; cursor: default; }
+#login-error {
+  display: none;
+  color: #b33;
+  font-size: .82rem;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #fde;
+  border-radius: 7px;
+}
+#login-ok {
+  display: none;
+  color: #1a5c3a;
+  font-size: .82rem;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #e8f5e9;
+  border-radius: 7px;
+  line-height: 1.5;
+}
+.login-footer {
+  margin-top: 20px;
+  font-size: .75rem;
+  color: #999;
+}
+</style>
+:root {
+  --navy: #1a3a6b;
+  --navy2: #0f2348;
+  --gold: #b8860b;
+  --gold-lt: #e8c84a;
+  --red: #8b1a1a;
+  --cream: #f9f7f2;
+  --cream2: #f0ece0;
+  --border: #d4cfc2;
+  --text: #1c1c1c;
+  --muted: #5a5a5a;
+  --white: #fff;
+  --green: #1a5c3a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Source Sans 3',sans-serif; background:#e8e4d8; min-height:100vh; }
+
+/* ─ TOPBAR ─ */
+.topbar {
+  background: var(--navy2);
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 3px solid var(--gold);
+}
+.topbar-logo { font-size: 22px; }
+.topbar h1 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 1.15rem; color: var(--cream); font-weight:700; letter-spacing:.5px;
+}
+.topbar small { color: var(--gold-lt); font-size:.72rem; font-weight:300; margin-left:auto; }
+
+/* ─ WRAPPER ─ */
+.wrapper { max-width:900px; margin:0 auto; padding:22px 14px 70px; display:grid; gap:16px; }
+
+/* ─ SECTION CARD ─ */
+.sec {
+  background: var(--white);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 6px rgba(0,0,0,.07);
+  overflow: visible;
+}
+.sec-head {
+  border-radius: 10px 10px 0 0;
+  background: var(--navy);
+  padding: 11px 18px;
+  display: flex; align-items: center; gap: 9px;
+  border-bottom: 2px solid var(--gold);
+}
+.sec-head h2 {
+  font-family: 'Libre Baskerville', serif;
+  font-size:.95rem; color:var(--cream); font-weight:700; letter-spacing:.3px;
+}
+.sec-head .ico { font-size:.95rem; }
+.sec-body { padding:18px; }
+
+/* ─ FORM ─ */
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:13px; }
+.g4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:13px; }
+@media(max-width:600px){ .g2,.g3,.g4 { grid-template-columns:1fr; } }
+.field { display:flex; flex-direction:column; gap:4px; }
+label { font-size:.68rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; }
+input,select,textarea {
+  font-family:'Source Sans 3',sans-serif;
+  font-size:.88rem; padding:9px 12px;
+  border:1.5px solid var(--border); border-radius:7px;
+  background:var(--cream); color:var(--text); outline:none;
+  transition:border-color .18s, background .18s;
+}
+input:focus,select:focus,textarea:focus { border-color:var(--navy); background:var(--white); }
+textarea { resize:vertical; min-height:60px; }
+
+/* ─ MED SEARCH ─ */
+.med-row { position:relative; z-index:10; isolation:isolate; }
+.med-row input { padding-right: 12px; }
+
+.dropdown {
+  position:absolute; top:calc(100% + 4px); left:0; right:0;
+  background:var(--white); border:1.5px solid var(--navy);
+  border-radius:9px; box-shadow:0 10px 28px rgba(0,0,0,.15);
+  z-index:9999; overflow-y:auto; max-height:220px;
+  animation:fd .14s ease;
+}
+@keyframes fd { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:none} }
+.d-item {
+  padding:10px 14px; cursor:pointer; font-size:.86rem;
+  border-bottom:1px solid var(--cream2);
+  display:flex; align-items:center; gap:8px;
+  transition:background .12s;
+}
+.d-item:last-child { border-bottom:none; }
+.d-item:hover { background:var(--cream); }
+.d-cat {
+  font-size:.65rem; background:var(--navy); color:var(--cream);
+  border-radius:4px; padding:2px 7px; font-weight:600; white-space:nowrap;
+}
+.d-loading { padding:14px; text-align:center; font-size:.84rem; color:var(--muted); display:flex; align-items:center; justify-content:center; gap:8px; }
+
+/* ─ DOSIS CHIPS ─ */
+.dosis-wrap { margin-top:12px; display:none; }
+.dosis-title { font-size:.68rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; margin-bottom:7px; display:flex; align-items:center; gap:6px; }
+.chips { display:flex; flex-wrap:wrap; gap:7px; }
+.chip {
+  padding:6px 14px; border-radius:20px;
+  border:1.5px solid var(--border); background:var(--cream);
+  cursor:pointer; font-size:.82rem; font-weight:500;
+  transition:all .14s;
+}
+.chip:hover { border-color:var(--navy); background:var(--white); }
+.chip.sel { background:var(--navy); color:var(--white); border-color:var(--navy); }
+
+/* ─ MED EXTRA ─ */
+.med-extra { display:none; margin-top:12px; }
+.med-extra.show { display:grid; }
+
+/* ─ BTN ADD ─ */
+.btn-add {
+  margin-top:14px; display:none;
+  background:var(--green); color:var(--white);
+  border:none; border-radius:8px; padding:10px 20px;
+  font-family:'Source Sans 3',sans-serif; font-size:.88rem; font-weight:600;
+  cursor:pointer; align-items:center; gap:7px;
+  transition:opacity .15s, transform .1s;
+}
+.btn-add:hover { opacity:.88; transform:translateY(-1px); }
+.btn-add.show { display:flex; }
+
+/* ─ MED LIST ─ */
+.med-list { display:flex; flex-direction:column; gap:9px; }
+.med-item {
+  background:var(--cream); border:1px solid var(--border);
+  border-radius:9px; padding:12px 15px;
+  display:flex; align-items:flex-start; gap:11px;
+  animation:si .18s ease;
+}
+@keyframes si{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.med-num {
+  width:24px;height:24px; background:var(--navy); color:var(--white);
+  border-radius:50%; display:grid; place-items:center;
+  font-size:.7rem; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.med-info { flex:1; }
+.med-name { font-weight:700; font-size:.9rem; color:var(--navy2); }
+.med-detail { font-size:.78rem; color:var(--muted); margin-top:2px; line-height:1.4; }
+.btn-rm { background:none;border:none;cursor:pointer;color:#b33;font-size:.95rem;padding:3px 6px;border-radius:5px;transition:background .12s; margin-left:auto; }
+.btn-rm:hover { background:#fde; }
+.btn-ord { background:none;border:1px solid var(--border);cursor:pointer;color:var(--navy);font-size:.65rem;padding:2px 5px;border-radius:4px;transition:background .12s;line-height:1; }
+.btn-ord:hover:not(:disabled) { background:var(--cream2); }
+.btn-ord:disabled { opacity:.3;cursor:default; }
+.empty { text-align:center; color:var(--muted); font-size:.85rem; padding:20px; border:2px dashed var(--border); border-radius:9px; }
+
+/* ─ ACTIONS ─ */
+.actions { display:flex; gap:10px; flex-wrap:wrap; }
+.btn-p {
+  flex:1; background:var(--navy2); color:var(--white);
+  border:none; border-radius:10px; padding:13px 22px;
+  font-family:'Source Sans 3',sans-serif; font-size:.9rem; font-weight:600;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px;
+  transition:opacity .15s;
+}
+.btn-p:hover { opacity:.85; }
+.btn-s {
+  flex:1; background:var(--white); color:var(--navy);
+  border:2px solid var(--navy); border-radius:10px; padding:13px 22px;
+  font-family:'Source Sans 3',sans-serif; font-size:.9rem; font-weight:600;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px;
+  transition:background .15s;
+}
+.btn-s:hover { background:var(--cream); }
+
+/* ─ OVERLAY ─ */
+#overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,.65); z-index:10000;
+  overflow-y:auto; padding:0; align-items:flex-start; justify-content:center;
+}
+#overlay.show { display:flex; }
+/* Cuando el overlay está abierto, ocultamos el dropdown y bajamos el stacking del buscador */
+body:has(#overlay.show) .med-row { z-index: 1 !important; isolation: auto !important; }
+body:has(#overlay.show) .dropdown { display: none !important; }
+.pbox {
+  background:var(--white); width:100%; max-width:680px;
+  border-radius:0; box-shadow:0 24px 60px rgba(0,0,0,.35);
+  display:flex; flex-direction:column;
+  min-height:100vh;
+}
+.pbox-top {
+  background:var(--navy2); padding:13px 18px;
+  display:flex; align-items:center; gap:10px;
+  border-bottom:2px solid var(--gold);
+  position:sticky; top:0; z-index:10;
+}
+.pbox-top span { color:var(--cream); flex:1; font-size:.9rem; font-weight:600; }
+.btn-impr { background:var(--gold); color:var(--navy2); border:none; border-radius:7px; padding:8px 16px; font-family:'Source Sans 3',sans-serif; font-size:.83rem; font-weight:700; cursor:pointer; }
+.btn-cerrar { background:transparent; border:1.5px solid rgba(255,255,255,.3); color:var(--white); border-radius:7px; padding:8px 13px; font-family:'Source Sans 3',sans-serif; font-size:.83rem; cursor:pointer; }
+
+/* ─ AVISO DE IMPRESIÓN (solo en pantalla, no se imprime) ─ */
+.print-tip {
+  background:#fff8dc; border-bottom:1px solid #e6d77a;
+  padding:9px 18px; font-size:.78rem; color:#5a4a00;
+  line-height:1.45;
+}
+.print-tip strong { color:#3a2f00; }
+.print-tip em { font-style:italic; color:#5a2d8e; font-weight:600; }
+
+/* ─ RECETA PRINT ─ */
+.receta { padding:30px 38px; font-family:'Source Sans 3',sans-serif; }
+.r-top { display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:3px double var(--navy); margin-bottom:8px; }
+.r-inst { text-align:center; flex:1; }
+.r-inst h2 { font-family:'Libre Baskerville',serif; font-size:1.3rem; color:var(--navy2); font-weight:700; letter-spacing:.5px; text-transform:uppercase; }
+.r-inst h3 { font-family:'Libre Baskerville',serif; font-size:.85rem; color:var(--navy); font-weight:400; margin-top:2px; }
+.r-logo-l, .r-logo-r { width:60px; text-align:center; font-size:2rem; }
+.r-aviso { text-align:center; font-size:.72rem; font-style:italic; color:var(--red); margin:8px 0 14px; font-weight:600; border:1px solid var(--red); border-radius:4px; padding:4px 10px; display:inline-block; }
+.r-aviso-wrap { text-align:center; }
+.r-fecha { text-align:right; font-size:.82rem; margin-bottom:12px; color:var(--text); }
+.r-pac { font-size:.88rem; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:14px; display:flex; flex-wrap:wrap; gap:6px 28px; }
+.r-pac span { color:var(--muted); font-size:.78rem; }
+.r-pac strong { font-size:.9rem; }
+.r-rx-title { font-family:'Libre Baskerville',serif; font-size:.75rem; text-transform:uppercase; letter-spacing:2px; color:var(--muted); margin-bottom:12px; }
+.r-med { margin-bottom:12px; padding-bottom:12px; border-bottom:1px dashed var(--border); }
+.r-med:last-of-type { border-bottom:none; }
+.r-med-name { font-weight:700; font-size:.92rem; color:var(--navy2); text-transform:uppercase; }
+.r-med-ind { font-size:.85rem; padding-left:14px; margin-top:3px; color:var(--text); }
+.r-notas { margin-top:12px; padding-top:10px; border-top:1px solid var(--border); font-size:.82rem; }
+.r-notas strong { font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); display:block; margin-bottom:4px; }
+.r-footer { margin-top:24px; border-top:2px solid var(--navy); padding-top:14px; display:flex; justify-content:space-between; align-items:flex-end; font-size:.72rem; }
+.r-firma { text-align:center; }
+.r-firma-line { border-top:1px solid var(--text); width:180px; margin:0 auto 4px; }
+.r-footer-addr { color:var(--muted); font-size:.65rem; max-width:320px; }
+
+@media print {
+  * { visibility: hidden; }
+  #overlay, #overlay * { visibility: visible; }
+
+  html, body {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  #overlay {
+    position: absolute !important;
+    top: 0 !important; left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+    align-items: unset !important;
+    justify-content: unset !important;
+  }
+
+  .pbox {
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    display: block !important;
+    flex-direction: unset !important;
+  }
+
+  .pbox-top  { display: none !important; visibility: hidden !important; }
+  .print-tip { display: none !important; visibility: hidden !important; }
+
+  .receta { padding: 14px 20px !important; }
+
+  /* Cada medicamento no se parte entre páginas */
+  .r-med { page-break-inside: avoid !important; break-inside: avoid !important; }
+
+  /* El footer NUNCA se separa de su bloque anterior */
+  .r-footer {
+    position: static !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    margin-top: 16px !important;
+    padding: 10px 0 0 !important;
+  }
+
+  /* El último medicamento y el footer van juntos */
+  .r-meds-wrap { display: block !important; }
+
+  #receta-out { padding-bottom: 0 !important; }
+
+  @page { margin: 1cm; size: A4; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ PANTALLA DE LOGIN ══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">⚕️</div>
+    <div class="login-title">Receta Médica Digital</div>
+    <div class="login-sub">CESS — Universidad Veracruzana</div>
+    <input type="email" id="login-email" placeholder="Tu correo electrónico" />
+    <button id="btn-login" onclick="enviarMagicLink()">✉️ Enviar enlace de acceso</button>
+    <div id="login-error"></div>
+    <div id="login-ok"></div>
+    <div class="login-footer">
+      Recibirás un enlace en tu correo.<br>Da clic en él para entrar — sin contraseña.
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP PRINCIPAL ══ -->
+<div id="app-root" style="display:none">
+
+<header class="topbar">
+  <div class="topbar-logo">⚕️</div>
+  <h1>Sistema de Receta Médica</h1>
+  <small>CESS — Universidad Veracruzana</small>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0">
+    <span id="user-badge" style="font-size:.72rem;color:rgba(255,255,255,.7);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <button onclick="cerrarSesion()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;border-radius:6px;padding:5px 10px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">Salir</button>
+  </div>
+</header>
+
+<div class="wrapper">
+
+  <!-- DATOS INSTITUCIÓN / MÉDICO -->
+  <div class="sec">
+    <div class="sec-head"><span class="ico">🏥</span><h2>Datos de la Institución / Médico</h2></div>
+    <div class="sec-body">
+      <div class="g2" style="margin-bottom:13px">
+        <div class="field"><label>Nombre de la institución</label><input id="inst-nombre" value="Universidad Veracruzana — CESS" /></div>
+        <div class="field"><label>Dirección</label><input id="inst-dir" value="Carmen Serdán No. 147 Esq. Fco. J. Mina, C.P. 91700, Veracruz, Ver." /></div>
+      </div>
+      <div class="g4">
+        <div class="field"><label>Nombre del médico</label><input id="doc-nombre" /></div>
+        <div class="field"><label>Especialidad</label><input id="doc-esp" /></div>
+        <div class="field"><label>Cédula profesional</label><input id="doc-cedula" /></div>
+        <div class="field"><label>Universidad</label><input id="doc-uni" /></div>
+      </div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="field" style="flex:0 0 auto">
+          <label>N° de receta</label>
+          <input id="num-receta" style="width:140px;background:var(--cream2);font-weight:700;color:var(--navy2)" readonly />
+        </div>
+        <button onclick="generarNumReceta()" style="margin-top:16px;background:var(--navy);color:var(--white);border:none;border-radius:7px;padding:9px 14px;font-family:'Source Sans 3',sans-serif;font-size:.8rem;cursor:pointer;">🔄 Regenerar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATOS PACIENTE -->
+  <div class="sec">
+    <div class="sec-head"><span class="ico">🧑‍💼</span><h2>Datos del Paciente</h2></div>
+    <div class="sec-body">
+      <div class="g4">
+        <div class="field"><label>Nombre completo</label><input id="pac-nombre" placeholder="Nombre del paciente" /></div>
+        <div class="field"><label>Edad</label><input id="pac-edad" placeholder="Se calcula automático" readonly style="background:var(--cream2);color:var(--muted)" /></div>
+        <div class="field"><label>Fecha de nacimiento</label><input id="pac-fnac" type="text" placeholder="Ej. 15/04/1999" /></div>
+        <div class="field"><label>Fecha de receta</label><input id="pac-fecha" type="date" /></div>
+      </div>
+      <div class="g2" style="margin-top:13px">
+        <div class="field"><label>Diagnóstico / Motivo de consulta</label><input id="pac-dx" placeholder="Ej. Infección de vías urinarias, HTA, IRAS..." /></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGREGAR MEDICAMENTO -->
+  <div class="sec">
+    <div class="sec-head"><span class="ico">💊</span><h2>Agregar Medicamento</h2></div>
+    <div class="sec-body">
+
+      <div class="field med-row">
+        <label>Buscar medicamento</label>
+        <input id="med-input" type="text" placeholder="Escribe el nombre (ej: Clindamicina, Mupirocina...)" autocomplete="off" />
+        <div id="dropdown" class="dropdown" style="display:none"></div>
+      </div>
+
+      <div class="dosis-wrap" id="dosis-wrap">
+        <p class="dosis-title" id="dosis-title">Selecciona la dosis</p>
+        <div class="chips" id="chips"></div>
+      </div>
+
+      <div class="med-extra g3" id="med-extra">
+        <div class="field"><label>Forma farmacéutica</label>
+          <select id="med-forma">
+            <option>Tabletas</option><option>Cápsulas</option><option>Ungüento</option>
+            <option>Jarabe</option><option>Solución</option><option>Inyectable</option>
+            <option>Crema</option><option>Gotas</option><option>Parche</option><option>Gel</option>
+          </select>
+        </div>
+        <div class="field"><label>Frecuencia</label>
+          <select id="med-freq">
+            <option>Cada 4 horas</option><option>Cada 6 horas</option>
+            <option selected>Cada 8 horas</option><option>Cada 12 horas</option>
+            <option>Cada 24 horas</option><option>Una vez al día</option>
+            <option>Dos veces al día</option><option>Tres veces al día</option>
+          </select>
+        </div>
+        <div class="field"><label>Duración</label>
+          <select id="med-dur">
+            <option>3 días</option><option>5 días</option><option selected>7 días</option>
+            <option>10 días</option><option>14 días</option><option>21 días</option>
+            <option>30 días</option><option>Uso continuo</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field" id="med-ind-wrap" style="display:none;margin-top:12px">
+        <label>Indicaciones específicas</label>
+        <input id="med-ind" placeholder="Ej. Tomar después de los alimentos, aplicar sobre la lesión..." />
+      </div>
+
+      <button class="btn-add" id="btn-add" onclick="agregarMed()">✅ Agregar a la receta</button>
+    </div>
+  </div>
+
+  <!-- LISTA MEDICAMENTOS -->
+  <div class="sec">
+    <div class="sec-head"><span class="ico">📋</span><h2>Medicamentos en Receta</h2></div>
+    <div class="sec-body">
+      <div id="med-list" class="med-list">
+        <div class="empty">Aún no hay medicamentos agregados</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTAS -->
+  <div class="sec">
+    <div class="sec-head"><span class="ico">📝</span><h2>Indicaciones generales / Notas</h2></div>
+    <div class="sec-body">
+      <textarea id="notas" placeholder="Reposo, dieta, compresas, regresar en X días si no mejora..."></textarea>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-s" onclick="limpiar()">🗑 Limpiar receta</button>
+    <button class="btn-p" onclick="verReceta()">🖨 Vista previa e imprimir</button>
+  </div>
+
+</div><!-- /wrapper -->
+
+<!-- OVERLAY PREVIEW -->
+<div id="overlay">
+  <div class="pbox">
+    <div class="pbox-top">
+      <span>Vista previa — Receta Médica</span>
+      <button class="btn-impr" onclick="imprimirReceta()">🖨 Imprimir</button>
+      <button class="btn-cerrar" onclick="document.getElementById('overlay').classList.remove('show')">✕ Cerrar</button>
+    </div>
+    <div class="print-tip">
+      💡 <strong>Antes de imprimir:</strong> En el cuadro de impresión, abre <em>Más opciones</em> → desmarca <strong>"Encabezados y pies de página"</strong> para que no aparezca la URL ni la fecha del navegador.
+    </div>
+    <div class="receta" id="receta-out"></div>
+  </div>
+</div>
+
+<!-- MODAL MANUAL -->
+<div id="modal-manual" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;border-radius:14px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.3);">
+    <div style="background:var(--navy);padding:13px 18px;border-bottom:2px solid var(--gold);display:flex;align-items:center;gap:10px;">
+      <span style="color:var(--cream);font-family:'Libre Baskerville',serif;font-size:.95rem;font-weight:700;flex:1;">✏️ Agregar medicamento manualmente</span>
+      <button onclick="cerrarManual()" style="background:transparent;border:1.5px solid rgba(255,255,255,.3);color:white;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:.8rem;">✕</button>
+    </div>
+    <div style="padding:18px;display:flex;flex-direction:column;gap:13px;">
+      <div class="field">
+        <label>Nombre del medicamento</label>
+        <input id="m-nombre" type="text" placeholder="Ej. Rifampicina, Tacrolimus..." />
+      </div>
+      <div class="field">
+        <label>Dosis (separadas por coma)</label>
+        <input id="m-dosis" type="text" placeholder="Ej. 150 mg, 300 mg, 600 mg" />
+      </div>
+      <div class="field">
+        <label>Forma farmacéutica</label>
+        <select id="m-forma">
+          <option>Tabletas</option><option>Cápsulas</option><option>Ungüento</option>
+          <option>Jarabe</option><option>Solución</option><option>Inyectable</option>
+          <option>Crema</option><option>Gotas</option><option>Parche</option>
+          <option>Gel</option><option>Spray nasal</option><option>Inhalador</option>
+          <option>Óvulos</option><option>Supositorio</option><option>Polvo</option>
+          <option>Suspensión</option><option>Gotas oftálmicas</option><option>Gotas óticas</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Categoría (opcional)</label>
+        <input id="m-cat" type="text" placeholder="Ej. Antibiótico, Antiviral..." />
+      </div>
+      <button onclick="guardarManual()" style="background:var(--green);color:white;border:none;border-radius:9px;padding:12px;font-family:'Source Sans 3',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:4px;">
+        ✅ Guardar y usar este medicamento
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   BASE LOCAL DE MEDICAMENTOS
+══════════════════════════════════════════ */
+const DB = {
+  // ── ANALGÉSICOS / ANTIINFLAMATORIOS ──
+  "Ibuprofeno":                    { dosis:["200 mg","400 mg","600 mg","800 mg"], cat:"AINE / Analgésico", forma:"Tabletas" },
+  "Paracetamol":                   { dosis:["500 mg","650 mg","1 g"], cat:"Analgésico / Antipirético", forma:"Tabletas" },
+  "Paracetamol Infantil":          { dosis:["100 mg/mL","160 mg/5 mL"], cat:"Analgésico pediátrico", forma:"Gotas / Jarabe" },
+  "Diclofenaco":                   { dosis:["25 mg","50 mg","75 mg","100 mg"], cat:"AINE", forma:"Tabletas" },
+  "Diclofenaco Gel":               { dosis:["1%","2%"], cat:"AINE tópico", forma:"Gel" },
+  "Ketorolaco":                    { dosis:["10 mg","30 mg"], cat:"AINE / Analgésico", forma:"Tabletas / Inyectable" },
+  "Naproxeno":                     { dosis:["250 mg","500 mg","550 mg"], cat:"AINE", forma:"Tabletas" },
+  "Celecoxib":                     { dosis:["100 mg","200 mg","400 mg"], cat:"AINE Cox-2", forma:"Cápsulas" },
+  "Meloxicam":                     { dosis:["7.5 mg","15 mg"], cat:"AINE Cox-2", forma:"Tabletas" },
+  "Nimesulida":                    { dosis:["100 mg","200 mg"], cat:"AINE Cox-2", forma:"Tabletas" },
+  "Metamizol":                     { dosis:["500 mg","1 g"], cat:"Analgésico / Antipirético", forma:"Tabletas / Inyectable" },
+  "Tramadol":                      { dosis:["50 mg","100 mg"], cat:"Analgésico opioide", forma:"Cápsulas" },
+  "Morfina":                       { dosis:["10 mg","30 mg"], cat:"Opioide", forma:"Tabletas / Inyectable" },
+  "Codeína":                       { dosis:["15 mg","30 mg","60 mg"], cat:"Opioide leve", forma:"Tabletas" },
+  "Aspirina":                      { dosis:["81 mg","325 mg","500 mg"], cat:"AINE / Antiagregante", forma:"Tabletas" },
+
+  // ── ANTIBIÓTICOS ──
+  "Amoxicilina":                   { dosis:["250 mg","500 mg","875 mg"], cat:"Antibiótico", forma:"Cápsulas" },
+  "Amoxicilina + Ácido Clavulánico":{ dosis:["500/125 mg","875/125 mg"], cat:"Antibiótico", forma:"Tabletas" },
+  "Amoxicilina Suspensión":        { dosis:["125 mg/5 mL","250 mg/5 mL"], cat:"Antibiótico pediátrico", forma:"Suspensión" },
+  "Azitromicina":                  { dosis:["250 mg","500 mg"], cat:"Antibiótico macrólido", forma:"Tabletas" },
+  "Claritromicina":                { dosis:["250 mg","500 mg"], cat:"Antibiótico macrólido", forma:"Tabletas" },
+  "Ciprofloxacino":                { dosis:["250 mg","500 mg","750 mg"], cat:"Antibiótico quinolona", forma:"Tabletas" },
+  "Levofloxacino":                 { dosis:["250 mg","500 mg","750 mg"], cat:"Antibiótico quinolona", forma:"Tabletas" },
+  "Clindamicina":                  { dosis:["150 mg","300 mg","450 mg","600 mg"], cat:"Antibiótico", forma:"Cápsulas" },
+  "Metronidazol":                  { dosis:["250 mg","500 mg"], cat:"Antibiótico / Antiparasitario", forma:"Tabletas" },
+  "Metronidazol Óvulos":           { dosis:["500 mg"], cat:"Antibiótico ginecológico", forma:"Óvulos vaginales" },
+  "Cefalexina":                    { dosis:["250 mg","500 mg","1 g"], cat:"Antibiótico cefalosporina", forma:"Cápsulas" },
+  "Cefadroxilo":                   { dosis:["500 mg","1 g"], cat:"Antibiótico cefalosporina", forma:"Cápsulas" },
+  "Ceftriaxona":                   { dosis:["500 mg","1 g","2 g"], cat:"Antibiótico cefalosporina", forma:"Inyectable" },
+  "Doxiciclina":                   { dosis:["50 mg","100 mg"], cat:"Antibiótico tetraciclina", forma:"Cápsulas" },
+  "Tetraciclina":                  { dosis:["250 mg","500 mg"], cat:"Antibiótico tetraciclina", forma:"Cápsulas" },
+  "Trimetoprim/Sulfametoxazol":    { dosis:["80/400 mg","160/800 mg"], cat:"Antibiótico sulfonamida", forma:"Tabletas" },
+  "Nitrofurantoína":               { dosis:["50 mg","100 mg"], cat:"Antibiótico urinario", forma:"Cápsulas" },
+  "Fosfomicina":                   { dosis:["3 g"], cat:"Antibiótico urinario", forma:"Sobres" },
+  "Penicilina V":                  { dosis:["400,000 UI","800,000 UI"], cat:"Antibiótico", forma:"Tabletas" },
+  "Mupirocina":                    { dosis:["2%"], cat:"Antibiótico tópico", forma:"Ungüento" },
+  "Eritromicina":                  { dosis:["250 mg","500 mg"], cat:"Antibiótico macrólido", forma:"Tabletas" },
+  "Vancomicina":                   { dosis:["125 mg","250 mg","500 mg"], cat:"Antibiótico glucopéptido", forma:"Cápsulas / Inyectable" },
+  "Linezolid":                     { dosis:["400 mg","600 mg"], cat:"Antibiótico oxazolidinona", forma:"Tabletas" },
+
+  // ── ANTIFÚNGICOS ──
+  "Fluconazol":                    { dosis:["50 mg","100 mg","150 mg","200 mg"], cat:"Antifúngico", forma:"Cápsulas" },
+  "Itraconazol":                   { dosis:["100 mg","200 mg"], cat:"Antifúngico", forma:"Cápsulas" },
+  "Clotrimazol":                   { dosis:["1%","2%","100 mg","500 mg"], cat:"Antifúngico tópico", forma:"Crema / Óvulos" },
+  "Nistatina":                     { dosis:["100,000 UI","500,000 UI"], cat:"Antifúngico", forma:"Tabletas / Suspensión" },
+  "Terbinafina":                   { dosis:["125 mg","250 mg","1%"], cat:"Antifúngico", forma:"Tabletas / Crema" },
+  "Ketoconazol":                   { dosis:["200 mg","2%"], cat:"Antifúngico", forma:"Tabletas / Champú / Crema" },
+  "Aciclovir":                     { dosis:["200 mg","400 mg","800 mg","5%"], cat:"Antiviral", forma:"Tabletas / Crema" },
+  "Acicran":                       { dosis:["200 mg","400 mg","800 mg"], cat:"Antiviral (Aciclovir)", forma:"Tabletas" },
+  "Acicran Mix":                   { dosis:["200 mg","400 mg"], cat:"Antiviral (Aciclovir)", forma:"Tabletas" },
+  "Valaciclovir":                  { dosis:["500 mg","1 g"], cat:"Antiviral", forma:"Tabletas" },
+  "Oseltamivir":                   { dosis:["30 mg","45 mg","75 mg"], cat:"Antiviral influenza", forma:"Cápsulas" },
+
+  // ── ANTIPARASITARIOS ──
+  "Albendazol":                    { dosis:["200 mg","400 mg"], cat:"Antiparasitario", forma:"Tabletas" },
+  "Mebendazol":                    { dosis:["100 mg","500 mg"], cat:"Antiparasitario", forma:"Tabletas" },
+  "Ivermectina":                   { dosis:["3 mg","6 mg","12 mg"], cat:"Antiparasitario", forma:"Tabletas" },
+  "Tinidazol":                     { dosis:["500 mg","1 g"], cat:"Antiparasitario / Antibiótico", forma:"Tabletas" },
+  "Nitazoxanida":                  { dosis:["100 mg/5 mL","500 mg"], cat:"Antiparasitario", forma:"Suspensión / Tabletas" },
+  "Secnidazol":                    { dosis:["500 mg","1 g"], cat:"Antiparasitario", forma:"Tabletas" },
+
+  // ── GASTROINTESTINAL ──
+  "Omeprazol":                     { dosis:["10 mg","20 mg","40 mg"], cat:"Inhibidor bomba protones", forma:"Cápsulas" },
+  "Pantoprazol":                   { dosis:["20 mg","40 mg"], cat:"Inhibidor bomba protones", forma:"Tabletas" },
+  "Esomeprazol":                   { dosis:["20 mg","40 mg"], cat:"Inhibidor bomba protones", forma:"Cápsulas" },
+  "Lansoprazol":                   { dosis:["15 mg","30 mg"], cat:"Inhibidor bomba protones", forma:"Cápsulas" },
+  "Famotidina":                    { dosis:["20 mg","40 mg"], cat:"Antiácido H2", forma:"Tabletas" },
+  "Metoclopramida":                { dosis:["5 mg","10 mg"], cat:"Procinético / Antiemético", forma:"Tabletas" },
+  "Domperidona":                   { dosis:["10 mg"], cat:"Procinético / Antiemético", forma:"Tabletas" },
+  "Ondansetrón":                   { dosis:["4 mg","8 mg"], cat:"Antiemético", forma:"Tabletas / Inyectable" },
+  "Loperamida":                    { dosis:["2 mg"], cat:"Antidiarreico", forma:"Cápsulas" },
+  "Bismuto":                       { dosis:["262 mg","525 mg"], cat:"Antidiarreico / Antiácido", forma:"Tabletas / Suspensión" },
+  "Sucralfato":                    { dosis:["1 g"], cat:"Citoprotector gástrico", forma:"Tabletas / Suspensión" },
+  "Mesalazina":                    { dosis:["400 mg","800 mg","1 g"], cat:"Antiinflamatorio intestinal", forma:"Tabletas" },
+  "Trimebutina":                   { dosis:["100 mg","200 mg"], cat:"Espasmolítico intestinal", forma:"Tabletas" },
+  "Butilhioscina":                 { dosis:["10 mg","20 mg"], cat:"Espasmolítico", forma:"Tabletas / Inyectable" },
+  "Simeticona":                    { dosis:["80 mg","125 mg"], cat:"Antiflatulento", forma:"Tabletas / Gotas" },
+  "Lactulosa":                     { dosis:["10 g/15 mL","15 mL"], cat:"Laxante", forma:"Jarabe" },
+  "Bisacodilo":                    { dosis:["5 mg","10 mg"], cat:"Laxante", forma:"Tabletas / Supositorio" },
+  "Polietilenglicol":              { dosis:["17 g"], cat:"Laxante osmótico", forma:"Polvo" },
+
+  // ── CARDIOVASCULAR ──
+  "Losartán":                      { dosis:["25 mg","50 mg","100 mg"], cat:"ARA II / Antihipertensivo", forma:"Tabletas" },
+  "Valsartán":                     { dosis:["80 mg","160 mg","320 mg"], cat:"ARA II / Antihipertensivo", forma:"Tabletas" },
+  "Enalapril":                     { dosis:["2.5 mg","5 mg","10 mg","20 mg"], cat:"IECA / Antihipertensivo", forma:"Tabletas" },
+  "Lisinopril":                    { dosis:["5 mg","10 mg","20 mg","40 mg"], cat:"IECA / Antihipertensivo", forma:"Tabletas" },
+  "Ramipril":                      { dosis:["2.5 mg","5 mg","10 mg"], cat:"IECA / Antihipertensivo", forma:"Cápsulas" },
+  "Amlodipino":                    { dosis:["2.5 mg","5 mg","10 mg"], cat:"Calcioantagonista", forma:"Tabletas" },
+  "Nifedipino":                    { dosis:["10 mg","20 mg","30 mg"], cat:"Calcioantagonista", forma:"Tabletas" },
+  "Metoprolol":                    { dosis:["25 mg","50 mg","100 mg","200 mg"], cat:"Betabloqueador", forma:"Tabletas" },
+  "Atenolol":                      { dosis:["25 mg","50 mg","100 mg"], cat:"Betabloqueador", forma:"Tabletas" },
+  "Propranolol":                   { dosis:["10 mg","20 mg","40 mg","80 mg"], cat:"Betabloqueador", forma:"Tabletas" },
+  "Bisoprolol":                    { dosis:["2.5 mg","5 mg","10 mg"], cat:"Betabloqueador", forma:"Tabletas" },
+  "Carvedilol":                    { dosis:["3.125 mg","6.25 mg","12.5 mg","25 mg"], cat:"Betabloqueador", forma:"Tabletas" },
+  "Furosemida":                    { dosis:["20 mg","40 mg","80 mg"], cat:"Diurético de asa", forma:"Tabletas" },
+  "Hidroclorotiazida":             { dosis:["12.5 mg","25 mg","50 mg"], cat:"Diurético tiazídico", forma:"Tabletas" },
+  "Espironolactona":               { dosis:["25 mg","50 mg","100 mg"], cat:"Diurético ahorrador K+", forma:"Tabletas" },
+  "Atorvastatina":                 { dosis:["10 mg","20 mg","40 mg","80 mg"], cat:"Estatina", forma:"Tabletas" },
+  "Rosuvastatina":                 { dosis:["5 mg","10 mg","20 mg","40 mg"], cat:"Estatina", forma:"Tabletas" },
+  "Simvastatina":                  { dosis:["10 mg","20 mg","40 mg"], cat:"Estatina", forma:"Tabletas" },
+  "Clopidogrel":                   { dosis:["75 mg"], cat:"Antiagregante plaquetario", forma:"Tabletas" },
+  "Warfarina":                     { dosis:["1 mg","2.5 mg","5 mg"], cat:"Anticoagulante", forma:"Tabletas" },
+  "Digoxina":                      { dosis:["0.125 mg","0.25 mg"], cat:"Glucósido cardíaco", forma:"Tabletas" },
+  "Amiodarona":                    { dosis:["100 mg","200 mg"], cat:"Antiarrítmico", forma:"Tabletas" },
+  "Nitroglicerina":                { dosis:["0.3 mg","0.5 mg","2.5 mg","6.5 mg"], cat:"Vasodilatador coronario", forma:"Tabletas / Parche" },
+  "Isosorbide":                    { dosis:["5 mg","10 mg","20 mg"], cat:"Vasodilatador coronario", forma:"Tabletas" },
+  "Trimetazidina":                 { dosis:["20 mg","35 mg"], cat:"Antianginoso", forma:"Tabletas" },
+
+  // ── DIABETES ──
+  "Metformina":                    { dosis:["500 mg","850 mg","1000 mg"], cat:"Antidiabético biguanida", forma:"Tabletas" },
+  "Glibenclamida":                 { dosis:["2.5 mg","5 mg"], cat:"Antidiabético sulfonilurea", forma:"Tabletas" },
+  "Glimepirida":                   { dosis:["1 mg","2 mg","4 mg"], cat:"Antidiabético sulfonilurea", forma:"Tabletas" },
+  "Sitagliptina":                  { dosis:["25 mg","50 mg","100 mg"], cat:"Antidiabético iDPP4", forma:"Tabletas" },
+  "Empagliflozina":                { dosis:["10 mg","25 mg"], cat:"Antidiabético iSGLT2", forma:"Tabletas" },
+  "Dapagliflozina":                { dosis:["5 mg","10 mg"], cat:"Antidiabético iSGLT2", forma:"Tabletas" },
+  "Insulina Regular":              { dosis:["100 UI/mL"], cat:"Insulina acción rápida", forma:"Inyectable" },
+  "Insulina NPH":                  { dosis:["100 UI/mL"], cat:"Insulina acción intermedia", forma:"Inyectable" },
+  "Insulina Glargina":             { dosis:["100 UI/mL"], cat:"Insulina acción prolongada", forma:"Inyectable" },
+  "Pioglitazona":                  { dosis:["15 mg","30 mg","45 mg"], cat:"Antidiabético tiazolidinediona", forma:"Tabletas" },
+
+  // ── RESPIRATORIO ──
+  "Salbutamol":                    { dosis:["2 mg","4 mg","100 mcg/dosis"], cat:"Broncodilatador B2", forma:"Tabletas / Inhalador" },
+  "Montelukast":                   { dosis:["4 mg","5 mg","10 mg"], cat:"Antileucotrieno", forma:"Tabletas" },
+  "Fluticasona":                   { dosis:["50 mcg","100 mcg","250 mcg"], cat:"Corticoide inhalado", forma:"Inhalador" },
+  "Budesonida":                    { dosis:["100 mcg","200 mcg","400 mcg"], cat:"Corticoide inhalado", forma:"Inhalador" },
+  "Beclometasona":                 { dosis:["50 mcg","100 mcg","250 mcg"], cat:"Corticoide inhalado", forma:"Inhalador" },
+  "Salmeterol":                    { dosis:["25 mcg","50 mcg"], cat:"Broncodilatador B2 LAB", forma:"Inhalador" },
+  "Formoterol":                    { dosis:["6 mcg","12 mcg"], cat:"Broncodilatador B2 LAB", forma:"Inhalador" },
+  "Ipratropio":                    { dosis:["20 mcg/dosis","0.25 mg/mL"], cat:"Anticolinérgico bronquial", forma:"Inhalador / Nebulización" },
+  "Tiotropio":                     { dosis:["18 mcg","2.5 mcg"], cat:"Anticolinérgico LAM", forma:"Inhalador" },
+  "Ambroxol":                      { dosis:["15 mg","30 mg","75 mg"], cat:"Mucolítico", forma:"Tabletas / Jarabe" },
+  "Acetilcisteína":                { dosis:["200 mg","600 mg"], cat:"Mucolítico / Antioxidante", forma:"Cápsulas / Sobres" },
+  "Guaifenesina":                  { dosis:["100 mg/5 mL","200 mg","400 mg"], cat:"Expectorante", forma:"Jarabe / Tabletas" },
+  "Dextrometorfano":               { dosis:["10 mg/5 mL","15 mg","30 mg"], cat:"Antitusígeno", forma:"Jarabe / Cápsulas" },
+  "Codeína + Guaifenesina":        { dosis:["10 mg/100 mg"], cat:"Antitusígeno", forma:"Jarabe" },
+  "Terbutalina":                   { dosis:["2.5 mg","5 mg"], cat:"Broncodilatador", forma:"Tabletas" },
+  "Zafirlukast":                   { dosis:["10 mg","20 mg"], cat:"Antileucotrieno", forma:"Tabletas" },
+
+  // ── CORTICOSTEROIDES ──
+  "Prednisona":                    { dosis:["5 mg","10 mg","20 mg","50 mg"], cat:"Corticosteroide oral", forma:"Tabletas" },
+  "Prednisolona":                  { dosis:["5 mg","15 mg/5 mL"], cat:"Corticosteroide oral", forma:"Tabletas / Jarabe" },
+  "Dexametasona":                  { dosis:["0.5 mg","4 mg","8 mg"], cat:"Corticosteroide", forma:"Tabletas / Inyectable" },
+  "Betametasona":                  { dosis:["0.05%","0.1%","0.5 mg","4 mg"], cat:"Corticosteroide", forma:"Crema / Tabletas / Inyectable" },
+  "Hidrocortisona":                { dosis:["1%","10 mg","20 mg","100 mg"], cat:"Corticosteroide", forma:"Crema / Tabletas / Inyectable" },
+  "Triamcinolona":                 { dosis:["0.1%","4 mg","10 mg","40 mg"], cat:"Corticosteroide", forma:"Crema / Inyectable" },
+  "Mometasona":                    { dosis:["0.1%","50 mcg"], cat:"Corticosteroide tópico/nasal", forma:"Crema / Spray nasal" },
+  "Fluocinolona":                  { dosis:["0.025%","0.01%"], cat:"Corticosteroide tópico", forma:"Crema / Ungüento" },
+
+  // ── ANTIHISTAMÍNICOS / ALERGIA ──
+  "Loratadina":                    { dosis:["5 mg","10 mg"], cat:"Antihistamínico 2G", forma:"Tabletas" },
+  "Cetirizina":                    { dosis:["5 mg","10 mg"], cat:"Antihistamínico 2G", forma:"Tabletas" },
+  "Fexofenadina":                  { dosis:["60 mg","120 mg","180 mg"], cat:"Antihistamínico 2G", forma:"Tabletas" },
+  "Levocetirizina":                { dosis:["2.5 mg","5 mg"], cat:"Antihistamínico 2G", forma:"Tabletas" },
+  "Desloratadina":                 { dosis:["2.5 mg","5 mg"], cat:"Antihistamínico 2G", forma:"Tabletas" },
+  "Difenhidramina":                { dosis:["25 mg","50 mg"], cat:"Antihistamínico 1G / Sedante", forma:"Cápsulas" },
+  "Clorfeniramina":                { dosis:["4 mg","8 mg","12 mg"], cat:"Antihistamínico 1G", forma:"Tabletas" },
+  "Hidroxizina":                   { dosis:["10 mg","25 mg","50 mg"], cat:"Antihistamínico / Ansiolítico", forma:"Tabletas" },
+  "Epinefrina":                    { dosis:["0.1 mg/mL","1 mg/mL"], cat:"Adrenérgico / Anafilaxia", forma:"Inyectable" },
+
+  // ── SISTEMA NERVIOSO / PSIQUIATRÍA ──
+  "Sertralina":                    { dosis:["25 mg","50 mg","100 mg"], cat:"Antidepresivo ISRS", forma:"Tabletas" },
+  "Fluoxetina":                    { dosis:["10 mg","20 mg","40 mg"], cat:"Antidepresivo ISRS", forma:"Cápsulas" },
+  "Paroxetina":                    { dosis:["10 mg","20 mg","40 mg"], cat:"Antidepresivo ISRS", forma:"Tabletas" },
+  "Escitalopram":                  { dosis:["5 mg","10 mg","20 mg"], cat:"Antidepresivo ISRS", forma:"Tabletas" },
+  "Citalopram":                    { dosis:["10 mg","20 mg","40 mg"], cat:"Antidepresivo ISRS", forma:"Tabletas" },
+  "Venlafaxina":                   { dosis:["37.5 mg","75 mg","150 mg"], cat:"Antidepresivo IRSN", forma:"Cápsulas" },
+  "Duloxetina":                    { dosis:["20 mg","30 mg","60 mg"], cat:"Antidepresivo IRSN", forma:"Cápsulas" },
+  "Amitriptilina":                 { dosis:["10 mg","25 mg","50 mg","75 mg"], cat:"Antidepresivo tricíclico", forma:"Tabletas" },
+  "Imipramina":                    { dosis:["10 mg","25 mg","50 mg"], cat:"Antidepresivo tricíclico", forma:"Tabletas" },
+  "Clomipramina":                  { dosis:["10 mg","25 mg","50 mg"], cat:"Antidepresivo tricíclico", forma:"Cápsulas" },
+  "Mirtazapina":                   { dosis:["15 mg","30 mg","45 mg"], cat:"Antidepresivo NaSSA", forma:"Tabletas" },
+  "Bupropión":                     { dosis:["75 mg","100 mg","150 mg"], cat:"Antidepresivo NDRI", forma:"Tabletas" },
+  "Clonazepam":                    { dosis:["0.25 mg","0.5 mg","1 mg","2 mg"], cat:"Benzodiacepina / Antiepiléptico", forma:"Tabletas" },
+  "Alprazolam":                    { dosis:["0.25 mg","0.5 mg","1 mg","2 mg"], cat:"Benzodiacepina / Ansiolítico", forma:"Tabletas" },
+  "Diazepam":                      { dosis:["2 mg","5 mg","10 mg"], cat:"Benzodiacepina", forma:"Tabletas" },
+  "Lorazepam":                     { dosis:["0.5 mg","1 mg","2 mg"], cat:"Benzodiacepina", forma:"Tabletas" },
+  "Bromazepam":                    { dosis:["1.5 mg","3 mg","6 mg"], cat:"Benzodiacepina", forma:"Tabletas" },
+  "Zolpidem":                      { dosis:["5 mg","10 mg"], cat:"Hipnótico", forma:"Tabletas" },
+  "Melatonina":                    { dosis:["1 mg","3 mg","5 mg","10 mg"], cat:"Hipnótico natural", forma:"Tabletas" },
+  "Haloperidol":                   { dosis:["0.5 mg","1 mg","2 mg","5 mg"], cat:"Antipsicótico típico", forma:"Tabletas" },
+  "Risperidona":                   { dosis:["0.5 mg","1 mg","2 mg","3 mg","4 mg"], cat:"Antipsicótico atípico", forma:"Tabletas" },
+  "Olanzapina":                    { dosis:["2.5 mg","5 mg","10 mg","20 mg"], cat:"Antipsicótico atípico", forma:"Tabletas" },
+  "Quetiapina":                    { dosis:["25 mg","50 mg","100 mg","200 mg","300 mg"], cat:"Antipsicótico atípico", forma:"Tabletas" },
+  "Aripiprazol":                   { dosis:["5 mg","10 mg","15 mg","30 mg"], cat:"Antipsicótico atípico", forma:"Tabletas" },
+  "Carbamazepina":                 { dosis:["100 mg","200 mg","400 mg"], cat:"Antiepiléptico / Estabilizador", forma:"Tabletas" },
+  "Ácido Valproico":               { dosis:["250 mg","500 mg","1000 mg"], cat:"Antiepiléptico / Estabilizador", forma:"Tabletas" },
+  "Levetiracetam":                 { dosis:["250 mg","500 mg","1000 mg"], cat:"Antiepiléptico", forma:"Tabletas" },
+  "Fenitoína":                     { dosis:["50 mg","100 mg"], cat:"Antiepiléptico", forma:"Cápsulas" },
+  "Lamotrigina":                   { dosis:["25 mg","50 mg","100 mg","200 mg"], cat:"Antiepiléptico / Estabilizador", forma:"Tabletas" },
+  "Topiramato":                    { dosis:["25 mg","50 mg","100 mg","200 mg"], cat:"Antiepiléptico", forma:"Tabletas" },
+  "Gabapentina":                   { dosis:["100 mg","300 mg","400 mg","600 mg","800 mg"], cat:"Antiepiléptico / Neuropático", forma:"Cápsulas" },
+  "Pregabalina":                   { dosis:["25 mg","50 mg","75 mg","150 mg","300 mg"], cat:"Antiepiléptico / Neuropático", forma:"Cápsulas" },
+  "Metilfenidato":                 { dosis:["5 mg","10 mg","18 mg","20 mg","36 mg"], cat:"Estimulante SNC / TDAH", forma:"Tabletas" },
+  "Atomoxetina":                   { dosis:["10 mg","18 mg","25 mg","40 mg","60 mg"], cat:"TDAH no estimulante", forma:"Cápsulas" },
+  "Litio":                         { dosis:["150 mg","300 mg","450 mg"], cat:"Estabilizador del ánimo", forma:"Cápsulas" },
+  "Donepezilo":                    { dosis:["5 mg","10 mg"], cat:"Anticolinesterásico / Alzheimer", forma:"Tabletas" },
+  "Memantina":                     { dosis:["5 mg","10 mg","20 mg"], cat:"Neuroprotector / Alzheimer", forma:"Tabletas" },
+  "Sumatriptán":                   { dosis:["25 mg","50 mg","100 mg"], cat:"Antimigráñoso triptán", forma:"Tabletas" },
+  "Propranolol (migraña)":         { dosis:["40 mg","80 mg"], cat:"Profilaxis migraña", forma:"Tabletas" },
+  "Topiramato (migraña)":          { dosis:["25 mg","50 mg","100 mg"], cat:"Profilaxis migraña", forma:"Tabletas" },
+  "Betahistina":                   { dosis:["8 mg","16 mg","24 mg"], cat:"Antivertiginoso", forma:"Tabletas" },
+  "Dimenhidrinato":                { dosis:["25 mg","50 mg"], cat:"Antivertiginoso / Antiemético", forma:"Tabletas" },
+
+  // ── TIROIDES / HORMONAS ──
+  "Levotiroxina":                  { dosis:["25 mcg","50 mcg","75 mcg","100 mcg","125 mcg","150 mcg"], cat:"Hormona tiroidea", forma:"Tabletas" },
+  "Metimazol":                     { dosis:["5 mg","10 mg","20 mg"], cat:"Antitiroideos", forma:"Tabletas" },
+  "Propiltiouracilo":              { dosis:["50 mg","100 mg"], cat:"Antitiroideos", forma:"Tabletas" },
+
+  // ── GINECOLOGÍA / OBSTETRICIA ──
+  "Ácido Fólico":                  { dosis:["0.4 mg","1 mg","5 mg"], cat:"Vitamina / Embarazo", forma:"Tabletas" },
+  "Progesterona":                  { dosis:["100 mg","200 mg","400 mg"], cat:"Progestágeno", forma:"Cápsulas / Óvulos" },
+  "Clomifeno":                     { dosis:["50 mg"], cat:"Inductor ovulación", forma:"Tabletas" },
+  "Misoprostol":                   { dosis:["25 mcg","200 mcg"], cat:"Prostaglandina uterotónica", forma:"Tabletas" },
+  "Oxitocina":                     { dosis:["10 UI/mL"], cat:"Uterotónico", forma:"Inyectable" },
+  "Terbutalina (tocolítico)":      { dosis:["2.5 mg","5 mg"], cat:"Tocolítico", forma:"Tabletas / Inyectable" },
+  "Metilergonovina":               { dosis:["0.2 mg"], cat:"Uterotónico postparto", forma:"Tabletas / Inyectable" },
+
+  // ── UROLOGÍA ──
+  "Tamsulosina":                   { dosis:["0.4 mg"], cat:"Alfa bloqueador / Próstata", forma:"Cápsulas" },
+  "Finasterida":                   { dosis:["1 mg","5 mg"], cat:"Inhibidor 5-alfa reductasa", forma:"Tabletas" },
+  "Dutasterida":                   { dosis:["0.5 mg"], cat:"Inhibidor 5-alfa reductasa", forma:"Cápsulas" },
+  "Sildenafil":                    { dosis:["25 mg","50 mg","100 mg"], cat:"Inhibidor PDE5", forma:"Tabletas" },
+  "Tadalafil":                     { dosis:["5 mg","10 mg","20 mg"], cat:"Inhibidor PDE5", forma:"Tabletas" },
+  "Oxybutinina":                   { dosis:["2.5 mg","5 mg"], cat:"Anticolinérgico / Vejiga hiperactiva", forma:"Tabletas" },
+  "Solifenacina":                  { dosis:["5 mg","10 mg"], cat:"Anticolinérgico / Vejiga hiperactiva", forma:"Tabletas" },
+
+  // ── OFTALMOLOGÍA ──
+  "Ciprofloxacino Oftálmico":      { dosis:["0.3%"], cat:"Antibiótico oftálmico", forma:"Gotas oftálmicas" },
+  "Tobramicina Oftálmica":         { dosis:["0.3%"], cat:"Antibiótico oftálmico", forma:"Gotas oftálmicas" },
+  "Dexametasona Oftálmica":        { dosis:["0.1%"], cat:"Corticoide oftálmico", forma:"Gotas oftálmicas" },
+  "Timolol":                       { dosis:["0.25%","0.5%"], cat:"Antihipertensivo ocular", forma:"Gotas oftálmicas" },
+  "Latanoprost":                   { dosis:["0.005%"], cat:"Antiglaucoma prostaglandina", forma:"Gotas oftálmicas" },
+  "Lágrimas Artificiales":         { dosis:["0.5%","1%"], cat:"Lubricante ocular", forma:"Gotas oftálmicas" },
+  "Cromoglicato Sódico Oftálmico": { dosis:["2%","4%"], cat:"Antialérgico oftálmico", forma:"Gotas oftálmicas" },
+
+  // ── OTORRINOLARINGOLOGÍA ──
+  "Ciprofloxacino Ótico":          { dosis:["0.2%","0.3%"], cat:"Antibiótico ótico", forma:"Gotas óticas" },
+  "Hidrocortisona + Neomicina Ótica":{ dosis:["1%/3.5 mg/mL"], cat:"Antibiótico + Corticoide ótico", forma:"Gotas óticas" },
+  "Oximetazolina":                 { dosis:["0.025%","0.05%","0.1%"], cat:"Descongestionante nasal", forma:"Spray nasal" },
+  "Xilometazolina":                { dosis:["0.05%","0.1%"], cat:"Descongestionante nasal", forma:"Spray nasal" },
+  "Fluticasona Nasal":             { dosis:["50 mcg"], cat:"Corticoide nasal", forma:"Spray nasal" },
+  "Budesonida Nasal":              { dosis:["32 mcg","64 mcg"], cat:"Corticoide nasal", forma:"Spray nasal" },
+  "Ipratropio Nasal":              { dosis:["0.03%","0.06%"], cat:"Anticolinérgico nasal", forma:"Spray nasal" },
+
+  // ── DERMATOLOGÍA ──
+  "Tretinoína":                    { dosis:["0.025%","0.05%","0.1%"], cat:"Retinoide tópico / Acné", forma:"Crema / Gel" },
+  "Adapaleno":                     { dosis:["0.1%","0.3%"], cat:"Retinoide tópico / Acné", forma:"Gel / Crema" },
+  "Peróxido de Benzoilo":          { dosis:["2.5%","5%","10%"], cat:"Antibacteriano tópico / Acné", forma:"Gel / Crema" },
+  "Eritromicina Tópica":           { dosis:["2%"], cat:"Antibiótico tópico / Acné", forma:"Gel / Solución" },
+  "Isotretinoína":                 { dosis:["10 mg","20 mg","40 mg"], cat:"Retinoide sistémico / Acné", forma:"Cápsulas" },
+  "Metronidazol Tópico":           { dosis:["0.75%","1%"], cat:"Antibiótico tópico / Rosácea", forma:"Gel / Crema" },
+  "Ivermectina Tópica":            { dosis:["1%"], cat:"Antiparasitario tópico / Rosácea", forma:"Crema" },
+  "Permectrina":                   { dosis:["1%","5%"], cat:"Antiparasitario tópico / Sarna", forma:"Crema / Loción" },
+  "Lindano":                       { dosis:["1%"], cat:"Antiparasitario tópico / Sarna", forma:"Loción" },
+  "Ácido Salicílico":              { dosis:["0.5%","1%","2%","5%","6%"], cat:"Queratolítico", forma:"Solución / Crema" },
+  "Urea":                          { dosis:["10%","20%","40%"], cat:"Emoliente / Queratolítico", forma:"Crema" },
+  "Tacrolimus Tópico":             { dosis:["0.03%","0.1%"], cat:"Inmunosupresor tópico / Dermatitis", forma:"Ungüento" },
+  "Pimecrolimus":                  { dosis:["1%"], cat:"Inmunosupresor tópico / Dermatitis", forma:"Crema" },
+  "Clobetasol":                    { dosis:["0.05%"], cat:"Corticoide tópico potente", forma:"Crema / Ungüento" },
+
+  // ── VITAMINAS / SUPLEMENTOS ──
+  "Vitamina C":                    { dosis:["250 mg","500 mg","1 g"], cat:"Vitamina / Antioxidante", forma:"Tabletas" },
+  "Vitamina D":                    { dosis:["400 UI","800 UI","1000 UI","2000 UI","50,000 UI"], cat:"Vitamina liposoluble", forma:"Cápsulas / Gotas" },
+  "Vitamina B12":                  { dosis:["500 mcg","1000 mcg"], cat:"Vitamina / Neuroprotector", forma:"Tabletas / Inyectable" },
+  "Complejo B":                    { dosis:["1 tableta","1 cápsula"], cat:"Complejo vitamínico", forma:"Tabletas / Cápsulas" },
+  "Hierro Elemental":              { dosis:["45 mg","60 mg","80 mg","150 mg"], cat:"Mineral / Anemia", forma:"Tabletas / Jarabe" },
+  "Sulfato Ferroso":               { dosis:["300 mg","325 mg"], cat:"Mineral / Anemia ferropénica", forma:"Tabletas" },
+  "Calcio + Vitamina D":           { dosis:["500 mg/200 UI","600 mg/400 UI"], cat:"Mineral / Osteoporosis", forma:"Tabletas" },
+  "Zinc":                          { dosis:["10 mg","20 mg","50 mg"], cat:"Mineral / Inmunomodulador", forma:"Tabletas / Jarabe" },
+  "Magnesio":                      { dosis:["150 mg","250 mg","400 mg"], cat:"Mineral / Calambres", forma:"Tabletas" },
+  "Potasio":                       { dosis:["10 mEq","20 mEq","40 mEq"], cat:"Electrolito", forma:"Tabletas / Solución" },
+  "Ácido Fólico + Hierro":         { dosis:["0.4 mg/40 mg","1 mg/60 mg"], cat:"Vitamina + Mineral / Embarazo", forma:"Tabletas" },
+  "Omega-3":                       { dosis:["500 mg","1000 mg"], cat:"Ácido graso / Cardioprotector", forma:"Cápsulas" },
+
+  // ── REUMATOLOGÍA ──
+  "Metotrexato":                   { dosis:["2.5 mg","5 mg","7.5 mg","10 mg","15 mg","25 mg"], cat:"Inmunosupresor / FARME", forma:"Tabletas / Inyectable" },
+  "Hidroxicloroquina":             { dosis:["200 mg","400 mg"], cat:"Antipalúdico / FARME", forma:"Tabletas" },
+  "Sulfasalazina":                 { dosis:["500 mg","1 g"], cat:"FARME / Antiinflamatorio", forma:"Tabletas" },
+  "Leflunomida":                   { dosis:["10 mg","20 mg"], cat:"FARME inmunosupresor", forma:"Tabletas" },
+  "Colchicina":                    { dosis:["0.5 mg","0.6 mg","1 mg"], cat:"Antigotoso / Antiinflamatorio", forma:"Tabletas" },
+  "Alopurinol":                    { dosis:["100 mg","200 mg","300 mg"], cat:"Antigotoso / Hipouricemiante", forma:"Tabletas" },
+  "Febuxostat":                    { dosis:["40 mg","80 mg","120 mg"], cat:"Antigotoso / Hipouricemiante", forma:"Tabletas" },
+
+  // ── ANTICOAGULANTES / HEMATOLOGÍA ──
+  "Rivaroxabán":                   { dosis:["10 mg","15 mg","20 mg"], cat:"Anticoagulante NOAC", forma:"Tabletas" },
+  "Apixabán":                      { dosis:["2.5 mg","5 mg"], cat:"Anticoagulante NOAC", forma:"Tabletas" },
+  "Dabigatrán":                    { dosis:["75 mg","110 mg","150 mg"], cat:"Anticoagulante NOAC", forma:"Cápsulas" },
+  "Enoxaparina":                   { dosis:["20 mg","40 mg","60 mg","80 mg","100 mg"], cat:"Heparina de bajo peso molecular", forma:"Inyectable" },
+  "Eritropoyetina":                { dosis:["1000 UI","2000 UI","4000 UI"], cat:"Estimulante eritropoyesis", forma:"Inyectable" },
+
+  // ── NOMBRES COMERCIALES MEXICANOS — ANALGÉSICOS ──
+  "Tempra":                        { dosis:["80 mg/mL","160 mg/5 mL"], cat:"Analgésico pediátrico (Paracetamol)", forma:"Gotas / Jarabe" },
+  "Tempra Forte":                  { dosis:["500 mg","1 g"], cat:"Analgésico (Paracetamol)", forma:"Tabletas" },
+  "Tylenol":                       { dosis:["500 mg","1 g"], cat:"Analgésico (Paracetamol)", forma:"Tabletas" },
+  "Voltaren":                      { dosis:["25 mg","50 mg","75 mg","100 mg"], cat:"AINE (Diclofenaco)", forma:"Tabletas / Gel" },
+  "Voltaren Gel":                  { dosis:["1%","2%"], cat:"AINE tópico (Diclofenaco)", forma:"Gel" },
+  "Cataflam":                      { dosis:["25 mg","50 mg"], cat:"AINE (Diclofenaco potásico)", forma:"Tabletas" },
+  "Melox":                         { dosis:["7.5 mg","15 mg"], cat:"AINE Cox-2 (Meloxicam)", forma:"Tabletas" },
+  "Celebrex":                      { dosis:["100 mg","200 mg","400 mg"], cat:"AINE Cox-2 (Celecoxib)", forma:"Cápsulas" },
+  "Advil":                         { dosis:["200 mg","400 mg","600 mg"], cat:"AINE (Ibuprofeno)", forma:"Tabletas" },
+  "Motrin":                        { dosis:["400 mg","600 mg","800 mg"], cat:"AINE (Ibuprofeno)", forma:"Tabletas" },
+  "Flanax":                        { dosis:["275 mg","550 mg"], cat:"AINE (Naproxeno sódico)", forma:"Tabletas" },
+  "Nalgesin":                      { dosis:["275 mg","550 mg"], cat:"AINE (Naproxeno sódico)", forma:"Tabletas" },
+  "Dolac":                         { dosis:["10 mg","30 mg"], cat:"AINE (Ketorolaco)", forma:"Tabletas / Inyectable" },
+  "Toradol":                       { dosis:["10 mg","30 mg"], cat:"AINE (Ketorolaco)", forma:"Tabletas / Inyectable" },
+  "Neomelubrina":                  { dosis:["500 mg","1 g"], cat:"Analgésico (Metamizol)", forma:"Tabletas / Inyectable" },
+  "Conmel":                        { dosis:["500 mg","1 g"], cat:"Analgésico (Metamizol)", forma:"Tabletas" },
+  "Tramal":                        { dosis:["50 mg","100 mg"], cat:"Analgésico opioide (Tramadol)", forma:"Cápsulas" },
+  "Zaldiar":                       { dosis:["37.5 mg/325 mg"], cat:"Analgésico combinado (Tramadol+Paracetamol)", forma:"Tabletas" },
+
+  // ── NOMBRES COMERCIALES — ANTIBIÓTICOS ──
+  "Trimox":                        { dosis:["250 mg","500 mg","875 mg"], cat:"Antibiótico (Amoxicilina)", forma:"Cápsulas" },
+  "Amoxil":                        { dosis:["250 mg","500 mg"], cat:"Antibiótico (Amoxicilina)", forma:"Cápsulas" },
+  "Augmentin":                     { dosis:["500/125 mg","875/125 mg"], cat:"Antibiótico (Amoxicilina+Clavulánico)", forma:"Tabletas" },
+  "Zithromax":                     { dosis:["250 mg","500 mg"], cat:"Antibiótico macrólido (Azitromicina)", forma:"Tabletas" },
+  "Zitromax":                      { dosis:["250 mg","500 mg"], cat:"Antibiótico macrólido (Azitromicina)", forma:"Tabletas" },
+  "Ciproflox":                     { dosis:["250 mg","500 mg","750 mg"], cat:"Antibiótico quinolona (Ciprofloxacino)", forma:"Tabletas" },
+  "Cipro":                         { dosis:["250 mg","500 mg","750 mg"], cat:"Antibiótico quinolona (Ciprofloxacino)", forma:"Tabletas" },
+  "Levaquin":                      { dosis:["250 mg","500 mg","750 mg"], cat:"Antibiótico quinolona (Levofloxacino)", forma:"Tabletas" },
+  "Flagyl":                        { dosis:["250 mg","500 mg"], cat:"Antibiótico/Antiparasitario (Metronidazol)", forma:"Tabletas" },
+  "Bactrim":                       { dosis:["80/400 mg","160/800 mg"], cat:"Antibiótico sulfonamida (TMP/SMX)", forma:"Tabletas" },
+  "Septra":                        { dosis:["80/400 mg","160/800 mg"], cat:"Antibiótico sulfonamida (TMP/SMX)", forma:"Tabletas" },
+  "Macrobid":                      { dosis:["100 mg"], cat:"Antibiótico urinario (Nitrofurantoína)", forma:"Cápsulas" },
+  "Furadantina":                   { dosis:["50 mg","100 mg"], cat:"Antibiótico urinario (Nitrofurantoína)", forma:"Cápsulas" },
+  "Monurol":                       { dosis:["3 g"], cat:"Antibiótico urinario (Fosfomicina)", forma:"Sobres" },
+  "Bactroban":                     { dosis:["2%"], cat:"Antibiótico tópico (Mupirocina)", forma:"Ungüento" },
+  "Dalacin":                       { dosis:["150 mg","300 mg"], cat:"Antibiótico (Clindamicina)", forma:"Cápsulas" },
+  "Vibramycin":                    { dosis:["50 mg","100 mg"], cat:"Antibiótico tetraciclina (Doxiciclina)", forma:"Cápsulas" },
+  "Doryx":                         { dosis:["50 mg","100 mg"], cat:"Antibiótico tetraciclina (Doxiciclina)", forma:"Cápsulas" },
+
+  // ── NOMBRES COMERCIALES — GASTROINTESTINAL ──
+  "Buscapina":                     { dosis:["10 mg","20 mg"], cat:"Espasmolítico (Butilhioscina)", forma:"Tabletas / Inyectable" },
+  "Buscapina Compositum":          { dosis:["10 mg/500 mg"], cat:"Espasmolítico + Analgésico", forma:"Tabletas" },
+  "Omeprazol Normon":              { dosis:["20 mg","40 mg"], cat:"Inhibidor bomba protones", forma:"Cápsulas" },
+  "Losec":                         { dosis:["20 mg","40 mg"], cat:"Inhibidor bomba protones (Omeprazol)", forma:"Cápsulas" },
+  "Nexium":                        { dosis:["20 mg","40 mg"], cat:"Inhibidor bomba protones (Esomeprazol)", forma:"Cápsulas" },
+  "Prevacid":                      { dosis:["15 mg","30 mg"], cat:"Inhibidor bomba protones (Lansoprazol)", forma:"Cápsulas" },
+  "Motilium":                      { dosis:["10 mg"], cat:"Procinético (Domperidona)", forma:"Tabletas" },
+  "Plasil":                        { dosis:["5 mg","10 mg"], cat:"Procinético (Metoclopramida)", forma:"Tabletas" },
+  "Zofran":                        { dosis:["4 mg","8 mg"], cat:"Antiemético (Ondansetrón)", forma:"Tabletas" },
+  "Imodium":                       { dosis:["2 mg"], cat:"Antidiarreico (Loperamida)", forma:"Cápsulas" },
+  "Pepto-Bismol":                  { dosis:["262 mg","525 mg"], cat:"Antidiarreico (Bismuto)", forma:"Tabletas / Suspensión" },
+  "Carafate":                      { dosis:["1 g"], cat:"Citoprotector gástrico (Sucralfato)", forma:"Tabletas" },
+  "Gas-X":                         { dosis:["80 mg","125 mg"], cat:"Antiflatulento (Simeticona)", forma:"Tabletas / Gotas" },
+  "Duphalac":                      { dosis:["10 g/15 mL"], cat:"Laxante (Lactulosa)", forma:"Jarabe" },
+  "Dulcolax":                      { dosis:["5 mg","10 mg"], cat:"Laxante (Bisacodilo)", forma:"Tabletas / Supositorio" },
+  "Miralax":                       { dosis:["17 g"], cat:"Laxante osmótico (Polietilenglicol)", forma:"Polvo" },
+  "Treda":                         { dosis:["100 mg","200 mg"], cat:"Espasmolítico (Trimebutina)", forma:"Tabletas" },
+
+  // ── NOMBRES COMERCIALES — CARDIOVASCULAR ──
+  "Cozaar":                        { dosis:["25 mg","50 mg","100 mg"], cat:"Antihipertensivo (Losartán)", forma:"Tabletas" },
+  "Diovan":                        { dosis:["80 mg","160 mg","320 mg"], cat:"Antihipertensivo (Valsartán)", forma:"Tabletas" },
+  "Vasotec":                       { dosis:["5 mg","10 mg","20 mg"], cat:"Antihipertensivo (Enalapril)", forma:"Tabletas" },
+  "Zestril":                       { dosis:["5 mg","10 mg","20 mg","40 mg"], cat:"Antihipertensivo (Lisinopril)", forma:"Tabletas" },
+  "Norvasc":                       { dosis:["2.5 mg","5 mg","10 mg"], cat:"Antihipertensivo (Amlodipino)", forma:"Tabletas" },
+  "Tenormin":                      { dosis:["25 mg","50 mg","100 mg"], cat:"Betabloqueador (Atenolol)", forma:"Tabletas" },
+  "Lopressor":                     { dosis:["25 mg","50 mg","100 mg"], cat:"Betabloqueador (Metoprolol)", forma:"Tabletas" },
+  "Lasix":                         { dosis:["20 mg","40 mg","80 mg"], cat:"Diurético (Furosemida)", forma:"Tabletas" },
+  "Aldactone":                     { dosis:["25 mg","50 mg","100 mg"], cat:"Diurético ahorrador K+ (Espironolactona)", forma:"Tabletas" },
+  "Lipitor":                       { dosis:["10 mg","20 mg","40 mg","80 mg"], cat:"Estatina (Atorvastatina)", forma:"Tabletas" },
+  "Crestor":                       { dosis:["5 mg","10 mg","20 mg","40 mg"], cat:"Estatina (Rosuvastatina)", forma:"Tabletas" },
+  "Plavix":                        { dosis:["75 mg"], cat:"Antiagregante (Clopidogrel)", forma:"Tabletas" },
+  "Coumadin":                      { dosis:["1 mg","2.5 mg","5 mg"], cat:"Anticoagulante (Warfarina)", forma:"Tabletas" },
+  "Xarelto":                       { dosis:["10 mg","15 mg","20 mg"], cat:"Anticoagulante NOAC (Rivaroxabán)", forma:"Tabletas" },
+  "Eliquis":                       { dosis:["2.5 mg","5 mg"], cat:"Anticoagulante NOAC (Apixabán)", forma:"Tabletas" },
+
+  // ── NOMBRES COMERCIALES — RESPIRATORIO ──
+  "Ventolin":                      { dosis:["100 mcg/dosis","2 mg","4 mg"], cat:"Broncodilatador (Salbutamol)", forma:"Inhalador / Tabletas" },
+  "ProAir":                        { dosis:["90 mcg/dosis"], cat:"Broncodilatador (Salbutamol)", forma:"Inhalador" },
+  "Singulair":                     { dosis:["4 mg","5 mg","10 mg"], cat:"Antileucotrieno (Montelukast)", forma:"Tabletas" },
+  "Flixotide":                     { dosis:["50 mcg","100 mcg","250 mcg"], cat:"Corticoide inhalado (Fluticasona)", forma:"Inhalador" },
+  "Pulmicort":                     { dosis:["100 mcg","200 mcg","400 mcg"], cat:"Corticoide inhalado (Budesonida)", forma:"Inhalador" },
+  "Atrovent":                      { dosis:["20 mcg/dosis","0.25 mg/mL"], cat:"Anticolinérgico (Ipratropio)", forma:"Inhalador" },
+  "Spiriva":                       { dosis:["18 mcg","2.5 mcg"], cat:"Anticolinérgico LAM (Tiotropio)", forma:"Inhalador" },
+  "Mucosolvan":                    { dosis:["15 mg","30 mg","75 mg"], cat:"Mucolítico (Ambroxol)", forma:"Tabletas / Jarabe" },
+  "Fluimucil":                     { dosis:["200 mg","600 mg"], cat:"Mucolítico (Acetilcisteína)", forma:"Cápsulas / Sobres" },
+  "Robitussin":                    { dosis:["100 mg/5 mL","200 mg"], cat:"Expectorante (Guaifenesina)", forma:"Jarabe / Tabletas" },
+
+  // ── NOMBRES COMERCIALES — ALERGIA / ANTIHISTAMÍNICOS ──
+  "Claritin":                      { dosis:["5 mg","10 mg"], cat:"Antihistamínico (Loratadina)", forma:"Tabletas" },
+  "Clarityne":                     { dosis:["5 mg","10 mg"], cat:"Antihistamínico (Loratadina)", forma:"Tabletas" },
+  "Zyrtec":                        { dosis:["5 mg","10 mg"], cat:"Antihistamínico (Cetirizina)", forma:"Tabletas" },
+  "Allegra":                       { dosis:["60 mg","120 mg","180 mg"], cat:"Antihistamínico (Fexofenadina)", forma:"Tabletas" },
+  "Aerius":                        { dosis:["2.5 mg","5 mg"], cat:"Antihistamínico (Desloratadina)", forma:"Tabletas" },
+  "Atarax":                        { dosis:["10 mg","25 mg","50 mg"], cat:"Antihistamínico/Ansiolítico (Hidroxizina)", forma:"Tabletas" },
+  "Benadryl":                      { dosis:["25 mg","50 mg"], cat:"Antihistamínico (Difenhidramina)", forma:"Cápsulas" },
+  "EpiPen":                        { dosis:["0.3 mg","0.15 mg"], cat:"Adrenérgico/Anafilaxia (Epinefrina)", forma:"Inyectable" },
+  "Nasonex":                       { dosis:["50 mcg"], cat:"Corticoide nasal (Mometasona)", forma:"Spray nasal" },
+
+  // ── NOMBRES COMERCIALES — SISTEMA NERVIOSO ──
+  "Prozac":                        { dosis:["10 mg","20 mg","40 mg"], cat:"Antidepresivo ISRS (Fluoxetina)", forma:"Cápsulas" },
+  "Zoloft":                        { dosis:["25 mg","50 mg","100 mg"], cat:"Antidepresivo ISRS (Sertralina)", forma:"Tabletas" },
+  "Paxil":                         { dosis:["10 mg","20 mg","40 mg"], cat:"Antidepresivo ISRS (Paroxetina)", forma:"Tabletas" },
+  "Lexapro":                       { dosis:["5 mg","10 mg","20 mg"], cat:"Antidepresivo ISRS (Escitalopram)", forma:"Tabletas" },
+  "Effexor":                       { dosis:["37.5 mg","75 mg","150 mg"], cat:"Antidepresivo IRSN (Venlafaxina)", forma:"Cápsulas" },
+  "Cymbalta":                      { dosis:["20 mg","30 mg","60 mg"], cat:"Antidepresivo IRSN (Duloxetina)", forma:"Cápsulas" },
+  "Elavil":                        { dosis:["10 mg","25 mg","50 mg"], cat:"Antidepresivo tricíclico (Amitriptilina)", forma:"Tabletas" },
+  "Remeron":                       { dosis:["15 mg","30 mg","45 mg"], cat:"Antidepresivo (Mirtazapina)", forma:"Tabletas" },
+  "Wellbutrin":                    { dosis:["75 mg","100 mg","150 mg"], cat:"Antidepresivo (Bupropión)", forma:"Tabletas" },
+  "Rivotril":                      { dosis:["0.25 mg","0.5 mg","1 mg","2 mg"], cat:"Benzodiacepina (Clonazepam)", forma:"Tabletas" },
+  "Xanax":                         { dosis:["0.25 mg","0.5 mg","1 mg","2 mg"], cat:"Benzodiacepina (Alprazolam)", forma:"Tabletas" },
+  "Valium":                        { dosis:["2 mg","5 mg","10 mg"], cat:"Benzodiacepina (Diazepam)", forma:"Tabletas" },
+  "Ativan":                        { dosis:["0.5 mg","1 mg","2 mg"], cat:"Benzodiacepina (Lorazepam)", forma:"Tabletas" },
+  "Ambien":                        { dosis:["5 mg","10 mg"], cat:"Hipnótico (Zolpidem)", forma:"Tabletas" },
+  "Ritalin":                       { dosis:["5 mg","10 mg","20 mg"], cat:"Estimulante TDAH (Metilfenidato)", forma:"Tabletas" },
+  "Concerta":                      { dosis:["18 mg","27 mg","36 mg","54 mg"], cat:"Estimulante TDAH (Metilfenidato)", forma:"Tabletas" },
+  "Strattera":                     { dosis:["10 mg","18 mg","25 mg","40 mg","60 mg"], cat:"TDAH (Atomoxetina)", forma:"Cápsulas" },
+  "Imitrex":                       { dosis:["25 mg","50 mg","100 mg"], cat:"Antimigráñoso (Sumatriptán)", forma:"Tabletas" },
+  "Tegretol":                      { dosis:["100 mg","200 mg","400 mg"], cat:"Antiepiléptico (Carbamazepina)", forma:"Tabletas" },
+  "Depakote":                      { dosis:["250 mg","500 mg","1000 mg"], cat:"Antiepiléptico (Ácido Valproico)", forma:"Tabletas" },
+  "Keppra":                        { dosis:["250 mg","500 mg","1000 mg"], cat:"Antiepiléptico (Levetiracetam)", forma:"Tabletas" },
+  "Lamictal":                      { dosis:["25 mg","50 mg","100 mg","200 mg"], cat:"Antiepiléptico (Lamotrigina)", forma:"Tabletas" },
+  "Topamax":                       { dosis:["25 mg","50 mg","100 mg"], cat:"Antiepiléptico (Topiramato)", forma:"Tabletas" },
+  "Neurontin":                     { dosis:["100 mg","300 mg","400 mg","600 mg"], cat:"Antiepiléptico (Gabapentina)", forma:"Cápsulas" },
+  "Lyrica":                        { dosis:["25 mg","75 mg","150 mg","300 mg"], cat:"Neuropático (Pregabalina)", forma:"Cápsulas" },
+  "Aricept":                       { dosis:["5 mg","10 mg"], cat:"Alzheimer (Donepezilo)", forma:"Tabletas" },
+
+  // ── NOMBRES COMERCIALES — DIABETES ──
+  "Glucophage":                    { dosis:["500 mg","850 mg","1000 mg"], cat:"Antidiabético (Metformina)", forma:"Tabletas" },
+  "Januvia":                       { dosis:["25 mg","50 mg","100 mg"], cat:"Antidiabético iDPP4 (Sitagliptina)", forma:"Tabletas" },
+  "Jardiance":                     { dosis:["10 mg","25 mg"], cat:"Antidiabético iSGLT2 (Empagliflozina)", forma:"Tabletas" },
+  "Farxiga":                       { dosis:["5 mg","10 mg"], cat:"Antidiabético iSGLT2 (Dapagliflozina)", forma:"Tabletas" },
+  "Ozempic":                       { dosis:["0.25 mg","0.5 mg","1 mg"], cat:"Antidiabético GLP-1 (Semaglutida)", forma:"Inyectable" },
+  "Victoza":                       { dosis:["0.6 mg","1.2 mg","1.8 mg"], cat:"Antidiabético GLP-1 (Liraglutida)", forma:"Inyectable" },
+  "Trulicity":                     { dosis:["0.75 mg","1.5 mg"], cat:"Antidiabético GLP-1 (Dulaglutida)", forma:"Inyectable" },
+  "Humulin R":                     { dosis:["100 UI/mL"], cat:"Insulina acción rápida", forma:"Inyectable" },
+  "Humulin N":                     { dosis:["100 UI/mL"], cat:"Insulina acción intermedia (NPH)", forma:"Inyectable" },
+  "Lantus":                        { dosis:["100 UI/mL"], cat:"Insulina acción prolongada (Glargina)", forma:"Inyectable" },
+  "Toujeo":                        { dosis:["300 UI/mL"], cat:"Insulina acción prolongada (Glargina)", forma:"Inyectable" },
+  "Tresiba":                       { dosis:["100 UI/mL","200 UI/mL"], cat:"Insulina acción ultra-prolongada (Degludec)", forma:"Inyectable" },
+  "Novorapid":                     { dosis:["100 UI/mL"], cat:"Insulina análogo rápida (Aspártica)", forma:"Inyectable" },
+  "Humalog":                       { dosis:["100 UI/mL"], cat:"Insulina análogo rápida (Lispro)", forma:"Inyectable" },
+
+  // ── NOMBRES COMERCIALES — CORTICOSTEROIDES ──
+  "Medrol":                        { dosis:["4 mg","8 mg","16 mg","32 mg"], cat:"Corticosteroide (Metilprednisolona)", forma:"Tabletas" },
+  "Decadron":                      { dosis:["0.5 mg","4 mg","8 mg"], cat:"Corticosteroide (Dexametasona)", forma:"Tabletas / Inyectable" },
+  "Celestone":                     { dosis:["0.5 mg","4 mg"], cat:"Corticosteroide (Betametasona)", forma:"Tabletas / Inyectable" },
+  "Betnovate":                     { dosis:["0.1%"], cat:"Corticosteroide tópico (Betametasona)", forma:"Crema / Ungüento" },
+  "Elocom":                        { dosis:["0.1%"], cat:"Corticosteroide tópico (Mometasona)", forma:"Crema / Ungüento" },
+  "Synalar":                       { dosis:["0.025%","0.01%"], cat:"Corticosteroide tópico (Fluocinolona)", forma:"Crema" },
+
+  // ── DERMATOLOGÍA ──
+  "Retin-A":                       { dosis:["0.025%","0.05%","0.1%"], cat:"Retinoide tópico (Tretinoína)", forma:"Crema / Gel" },
+  "Differin":                      { dosis:["0.1%","0.3%"], cat:"Retinoide tópico (Adapaleno)", forma:"Gel / Crema" },
+  "Benzac":                        { dosis:["2.5%","5%","10%"], cat:"Antibacteriano tópico (Peróxido de benzoilo)", forma:"Gel" },
+  "Dalacin T":                     { dosis:["1%"], cat:"Antibiótico tópico (Clindamicina)", forma:"Solución / Gel" },
+  "Epiduo":                        { dosis:["0.1%/2.5%","0.3%/2.5%"], cat:"Antiacné (Adapaleno+Peróxido)", forma:"Gel" },
+  "Tacrolimus":                    { dosis:["0.03%","0.1%"], cat:"Inmunomodulador tópico", forma:"Ungüento" },
+  "Pimecrolimus":                  { dosis:["1%"], cat:"Inmunomodulador tópico", forma:"Crema" },
+  "Isotretinoína":                 { dosis:["10 mg","20 mg","40 mg"], cat:"Retinoide oral / Acné severo", forma:"Cápsulas" },
+  "Accutane":                      { dosis:["10 mg","20 mg","40 mg"], cat:"Retinoide oral (Isotretinoína)", forma:"Cápsulas" },
+  "Minocín":                       { dosis:["50 mg","100 mg"], cat:"Antibiótico acné (Minociclina)", forma:"Cápsulas" },
+  "Permetrina":                    { dosis:["1%","5%"], cat:"Antiparasitario tópico (sarna/piojos)", forma:"Crema / Loción" },
+  "Lindano":                       { dosis:["1%"], cat:"Antiparasitario tópico (sarna)", forma:"Loción" },
+  "Óxido de zinc":                 { dosis:["10%","20%","40%"], cat:"Protector/Astringente dérmico", forma:"Pasta / Crema" },
+  "Ciclopirox":                    { dosis:["1%","8%"], cat:"Antifúngico tópico", forma:"Crema / Laca" },
+
+  // ── OFTALMOLOGÍA ──
+  "Tobramicina colirio":           { dosis:["0.3%"], cat:"Antibiótico oftálmico", forma:"Gotas oftálmicas" },
+  "Ciprofloxacino colirio":        { dosis:["0.3%"], cat:"Antibiótico oftálmico", forma:"Gotas oftálmicas" },
+  "Levofloxacino colirio":         { dosis:["0.5%"], cat:"Antibiótico oftálmico", forma:"Gotas oftálmicas" },
+  "Dexametasona colirio":          { dosis:["0.1%"], cat:"Corticoide oftálmico", forma:"Gotas oftálmicas" },
+  "Tobradex":                      { dosis:["0.3%/0.1%"], cat:"Antibiótico+Corticoide oftálmico", forma:"Gotas oftálmicas" },
+  "Maxitrol":                      { dosis:["3.5 mg/0.1%"], cat:"Antibiótico+Corticoide oftálmico", forma:"Gotas oftálmicas" },
+  "Vigamox":                       { dosis:["0.5%"], cat:"Antibiótico oftálmico (Moxifloxacino)", forma:"Gotas oftálmicas" },
+  "Systane":                       { dosis:["0.4%/0.3%"], cat:"Lubricante ocular (lágrima artificial)", forma:"Gotas oftálmicas" },
+  "Refresh":                       { dosis:["0.5%"], cat:"Lubricante ocular (lágrima artificial)", forma:"Gotas oftálmicas" },
+  "Xalatan":                       { dosis:["0.005%"], cat:"Antiglaucomatoso (Latanoprost)", forma:"Gotas oftálmicas" },
+  "Lumigan":                       { dosis:["0.01%","0.03%"], cat:"Antiglaucomatoso (Bimatoprost)", forma:"Gotas oftálmicas" },
+  "Timolol colirio":               { dosis:["0.25%","0.5%"], cat:"Antiglaucomatoso (Timolol)", forma:"Gotas oftálmicas" },
+  "Betoptic":                      { dosis:["0.25%","0.5%"], cat:"Antiglaucomatoso (Betaxolol)", forma:"Gotas oftálmicas" },
+  "Aciclovir oftálmico":           { dosis:["3%"], cat:"Antiviral oftálmico", forma:"Ungüento oftálmico" },
+
+  // ── OTORRINOLARINGOLOGÍA ──
+  "Ciprofloxacino ótico":          { dosis:["0.2%","0.3%"], cat:"Antibiótico ótico", forma:"Gotas óticas" },
+  "Ofloxacino ótico":              { dosis:["0.3%"], cat:"Antibiótico ótico", forma:"Gotas óticas" },
+  "Cortisporin ótico":             { dosis:["10,000 UI/10 mg/3.5 mg"], cat:"Antibiótico+Corticoide ótico", forma:"Gotas óticas" },
+  "Otipax":                        { dosis:["4%/1%"], cat:"Analgésico ótico", forma:"Gotas óticas" },
+  "Xylometazolina":                { dosis:["0.05%","0.1%"], cat:"Descongestivo nasal", forma:"Spray nasal / Gotas nasales" },
+  "Oximetazolina":                 { dosis:["0.025%","0.05%"], cat:"Descongestivo nasal", forma:"Spray nasal" },
+  "Afrin":                         { dosis:["0.05%"], cat:"Descongestivo nasal (Oximetazolina)", forma:"Spray nasal" },
+  "Otrivin":                       { dosis:["0.05%","0.1%"], cat:"Descongestivo nasal (Xylometazolina)", forma:"Spray nasal" },
+
+  // ── GINECOLOGÍA ──
+  "Clotrimazol óvulos":            { dosis:["100 mg","200 mg","500 mg"], cat:"Antifúngico vaginal", forma:"Óvulos vaginales" },
+  "Canesten":                      { dosis:["1%","100 mg","500 mg"], cat:"Antifúngico (Clotrimazol)", forma:"Crema / Óvulos" },
+  "Diflucan":                      { dosis:["50 mg","100 mg","150 mg","200 mg"], cat:"Antifúngico (Fluconazol)", forma:"Cápsulas" },
+  "Metronidazol gel vaginal":      { dosis:["0.75%"], cat:"Antibiótico vaginal (Metronidazol)", forma:"Gel vaginal" },
+  "Metrogel":                      { dosis:["0.75%"], cat:"Antibiótico vaginal/tópico (Metronidazol)", forma:"Gel" },
+  "Clindamicina crema vaginal":    { dosis:["2%"], cat:"Antibiótico vaginal (Clindamicina)", forma:"Crema vaginal" },
+  "Noretisterona":                 { dosis:["0.35 mg","5 mg"], cat:"Progestina / Anticonceptivo", forma:"Tabletas" },
+  "Levonorgestrel":                { dosis:["0.03 mg","0.15 mg","1.5 mg"], cat:"Progestina / Anticonceptivo", forma:"Tabletas" },
+  "Diane-35":                      { dosis:["2 mg/0.035 mg"], cat:"Anticonceptivo (Ciproterona+Etinilestradiol)", forma:"Tabletas" },
+  "Yasmin":                        { dosis:["3 mg/0.03 mg"], cat:"Anticonceptivo (Drospirenona+Etinilestradiol)", forma:"Tabletas" },
+  "Microgynon":                    { dosis:["0.15 mg/0.03 mg"], cat:"Anticonceptivo combinado", forma:"Tabletas" },
+  "Postinor":                      { dosis:["1.5 mg"], cat:"Anticonceptivo de emergencia (Levonorgestrel)", forma:"Tabletas" },
+  "Oxitocina":                     { dosis:["5 UI","10 UI"], cat:"Uterotónico", forma:"Inyectable" },
+  "Misoprostol":                   { dosis:["200 mcg"], cat:"Prostaglandina / Uterotónico", forma:"Tabletas" },
+
+  // ── UROLOGÍA ──
+  "Tamsulosina":                   { dosis:["0.4 mg"], cat:"Alfa-bloqueador / Próstata", forma:"Cápsulas" },
+  "Flomax":                        { dosis:["0.4 mg"], cat:"Alfa-bloqueador (Tamsulosina)", forma:"Cápsulas" },
+  "Finasterida":                   { dosis:["1 mg","5 mg"], cat:"Inhibidor 5-alfa reductasa / Próstata", forma:"Tabletas" },
+  "Proscar":                       { dosis:["5 mg"], cat:"Inhibidor 5-alfa reductasa (Finasterida)", forma:"Tabletas" },
+  "Dutasterida":                   { dosis:["0.5 mg"], cat:"Inhibidor 5-alfa reductasa / Próstata", forma:"Cápsulas" },
+  "Sildenafil":                    { dosis:["25 mg","50 mg","100 mg"], cat:"Inhibidor PDE5 / Disfunción eréctil", forma:"Tabletas" },
+  "Viagra":                        { dosis:["25 mg","50 mg","100 mg"], cat:"Inhibidor PDE5 (Sildenafil)", forma:"Tabletas" },
+  "Tadalafil":                     { dosis:["5 mg","10 mg","20 mg"], cat:"Inhibidor PDE5 / Disfunción eréctil", forma:"Tabletas" },
+  "Cialis":                        { dosis:["5 mg","10 mg","20 mg"], cat:"Inhibidor PDE5 (Tadalafil)", forma:"Tabletas" },
+  "Oxibutinina":                   { dosis:["5 mg","10 mg","15 mg"], cat:"Anticolinérgico / Vejiga hiperactiva", forma:"Tabletas" },
+  "Solifenacina":                  { dosis:["5 mg","10 mg"], cat:"Anticolinérgico / Vejiga hiperactiva", forma:"Tabletas" },
+  "Tolterodina":                   { dosis:["1 mg","2 mg","4 mg"], cat:"Anticolinérgico / Vejiga hiperactiva", forma:"Tabletas" },
+
+  // ── PEDIATRÍA ──
+  "Tempra Gotas":                  { dosis:["80 mg/mL"], cat:"Analgésico pediátrico (Paracetamol)", forma:"Gotas" },
+  "Ibuprofeno Suspensión":         { dosis:["100 mg/5 mL","200 mg/5 mL"], cat:"AINE pediátrico (Ibuprofeno)", forma:"Suspensión" },
+  "Motrin Suspensión":             { dosis:["100 mg/5 mL"], cat:"AINE pediátrico (Ibuprofeno)", forma:"Suspensión" },
+  "Amoxicilina Pediátrica":        { dosis:["125 mg/5 mL","250 mg/5 mL"], cat:"Antibiótico pediátrico", forma:"Suspensión" },
+  "Azitromicina Suspensión":       { dosis:["100 mg/5 mL","200 mg/5 mL"], cat:"Antibiótico pediátrico (Azitromicina)", forma:"Suspensión" },
+  "Salbutamol Jarabe":             { dosis:["2 mg/5 mL"], cat:"Broncodilatador pediátrico", forma:"Jarabe" },
+  "Budesonida Nebulización":       { dosis:["0.25 mg/2 mL","0.5 mg/2 mL","1 mg/2 mL"], cat:"Corticoide inhalado pediátrico", forma:"Solución para nebulización" },
+  "Loratadina Jarabe":             { dosis:["5 mg/5 mL"], cat:"Antihistamínico pediátrico", forma:"Jarabe" },
+  "Cetirizina Gotas":              { dosis:["10 mg/mL"], cat:"Antihistamínico pediátrico", forma:"Gotas" },
+  "Dimeticona":                    { dosis:["40 mg/mL"], cat:"Antiflatulento pediátrico", forma:"Gotas" },
+  "Pedialyte":                     { dosis:["Solución estándar"], cat:"Sales de rehidratación oral", forma:"Solución" },
+  "Zinc Pediátrico":               { dosis:["10 mg","20 mg"], cat:"Suplemento zinc pediátrico", forma:"Tabletas / Solución" },
+  "Metronidazol Suspensión":       { dosis:["125 mg/5 mL","250 mg/5 mL"], cat:"Antiparasitario pediátrico", forma:"Suspensión" },
+  "Nitazoxanida Suspensión":       { dosis:["100 mg/5 mL"], cat:"Antiparasitario pediátrico", forma:"Suspensión" },
+
+  // ── VITAMINAS / SUPLEMENTOS ──
+  "Vitamina C":                    { dosis:["250 mg","500 mg","1000 mg"], cat:"Vitamina / Antioxidante", forma:"Tabletas / Cápsulas" },
+  "Vitamina D3":                   { dosis:["400 UI","1000 UI","2000 UI","5000 UI"], cat:"Vitamina D / Metabolismo óseo", forma:"Tabletas / Gotas" },
+  "Vitamina B12":                  { dosis:["500 mcg","1000 mcg"], cat:"Vitamina B12 / Neuroprotector", forma:"Tabletas / Inyectable" },
+  "Complejo B":                    { dosis:["1 tableta","2 tabletas"], cat:"Complejo vitamínico B", forma:"Tabletas" },
+  "Calcio + Vitamina D":           { dosis:["500 mg/200 UI","600 mg/400 UI"], cat:"Suplemento calcio", forma:"Tabletas" },
+  "Carbonato de calcio":           { dosis:["500 mg","1000 mg"], cat:"Suplemento calcio / Antiácido", forma:"Tabletas" },
+  "Sulfato ferroso":               { dosis:["300 mg","325 mg"], cat:"Suplemento hierro / Anemia", forma:"Tabletas" },
+  "Hierro polimaltosado":          { dosis:["50 mg","100 mg"], cat:"Suplemento hierro", forma:"Tabletas / Jarabe" },
+  "Magnesio":                      { dosis:["200 mg","400 mg","500 mg"], cat:"Suplemento magnesio", forma:"Tabletas / Cápsulas" },
+  "Melatonina":                    { dosis:["1 mg","3 mg","5 mg","10 mg"], cat:"Hipnótico natural", forma:"Tabletas" },
+  "Probióticos":                   { dosis:["1 cápsula","2 cápsulas"], cat:"Probiótico / Microbiota intestinal", forma:"Cápsulas / Sobres" },
+  "Biotina":                       { dosis:["1 mg","5 mg","10 mg"], cat:"Vitamina B7 / Cabello y uñas", forma:"Tabletas / Cápsulas" },
+};
+
+
+/* ══════════════════════════════════════════
+   ESTADO
+══════════════════════════════════════════ */
+let medActual = null, dosisActual = null;
+let lista = [];
+
+/* Sanitiza texto para insertar en HTML sin riesgo de XSS */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+/* ══════════════════════════════════════════
+   AUTOCOMPLETE LOCAL
+══════════════════════════════════════════ */
+const inp = document.getElementById('med-input');
+const dd  = document.getElementById('dropdown');
+
+inp.addEventListener('input', () => {
+  const q = inp.value.trim();
+  resetMedState();
+
+  if (q.length < 2) { dd.style.display='none'; return; }
+
+  const local = Object.keys(DB).filter(k => k.toLowerCase().includes(q.toLowerCase()));
+
+  if (local.length) {
+    renderDropdown(local.map(k => ({ nombre:k, cat:DB[k].cat })));
+  } else {
+    const div = document.createElement('div');
+    div.className = 'd-item';
+    div.dataset.nombreManual = q;
+    div.innerHTML = `✏️ <strong>Agregar "${escHtml(q)}" manualmente</strong><span class="d-cat" style="background:#2d6a4f">MANUAL</span>`;
+    div.addEventListener('click', () => abrirManual(div.dataset.nombreManual));
+    dd.innerHTML = '';
+    dd.appendChild(div);
+    dd.style.display = 'block';
+  }
+});
+
+function renderDropdown(items) {
+  if (!items.length) { dd.style.display='none'; return; }
+  dd.innerHTML = items.map(it => `
+    <div class="d-item" onclick="selMed('${it.nombre}')">
+      💊 ${it.nombre}
+      <span class="d-cat">${it.cat}</span>
+    </div>
+  `).join('');
+  dd.style.display='block';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.med-row')) dd.style.display='none';
+});
+
+function selMed(nombre) {
+  medActual = nombre;
+  inp.value = nombre;
+  dd.style.display = 'none';
+
+  const data = DB[nombre];
+  const chips = document.getElementById('chips');
+  chips.innerHTML = data.dosis.map(d =>
+    `<div class="chip" onclick="selDosis(this,'${d}')">${d}</div>`
+  ).join('');
+
+  document.getElementById('dosis-title').innerHTML = 'Selecciona la dosis';
+
+  // Autoseleccionar forma farmacéutica desde DB
+  const formaDB = data.forma;
+  if (formaDB) {
+    const sel = document.getElementById('med-forma');
+    const formaLow = formaDB.toLowerCase().split('/')[0].trim();
+    let matched = false;
+    for (let opt of sel.options) {
+      if (opt.value.toLowerCase().includes(formaLow) || formaLow.includes(opt.value.toLowerCase())) {
+        sel.value = opt.value; matched = true; break;
+      }
+    }
+    if (!matched) {
+      const newOpt = document.createElement('option');
+      newOpt.value = formaDB; newOpt.textContent = formaDB;
+      sel.appendChild(newOpt); sel.value = formaDB;
+    }
+  }
+
+  document.getElementById('dosis-wrap').style.display='block';
+  document.getElementById('med-extra').classList.remove('show');
+  document.getElementById('med-ind-wrap').style.display='none';
+  document.getElementById('btn-add').classList.remove('show');
+}
+
+function selDosis(el, dosis) {
+  document.querySelectorAll('#chips .chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  dosisActual = dosis;
+  document.getElementById('med-extra').classList.add('show');
+  document.getElementById('med-ind-wrap').style.display='block';
+  document.getElementById('btn-add').classList.add('show');
+}
+
+function resetMedState() {
+  medActual = null; dosisActual = null;
+  document.getElementById('dosis-wrap').style.display='none';
+  document.getElementById('med-extra').classList.remove('show');
+  document.getElementById('med-ind-wrap').style.display='none';
+  document.getElementById('btn-add').classList.remove('show');
+}
+
+/* ══════════════════════════════════════════
+   LISTA
+══════════════════════════════════════════ */
+function agregarMed() {
+  if (!medActual || !dosisActual) return;
+  const forma = document.getElementById('med-forma').value;
+  const freq  = document.getElementById('med-freq').value;
+  const dur   = document.getElementById('med-dur').value;
+  const ind   = document.getElementById('med-ind').value.trim();
+  lista.push({ nombre:medActual, dosis:dosisActual, forma, freq, dur, ind });
+  renderLista();
+  // reset
+  inp.value=''; document.getElementById('med-ind').value='';
+  resetMedState();
+}
+
+function renderLista() {
+  const el = document.getElementById('med-list');
+  if (!lista.length) { el.innerHTML='<div class="empty">Aún no hay medicamentos agregados</div>'; return; }
+  el.innerHTML = lista.map((m,i) => `
+    <div class="med-item">
+      <div class="med-num">${i+1}</div>
+      <div class="med-info">
+        <div class="med-name">${m.nombre} ${m.dosis} ${m.forma}</div>
+        <div class="med-detail">
+          ${m.freq} · Durante ${m.dur}
+          ${m.ind ? `<br>${m.ind}` : ''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;margin-left:auto;margin-right:4px">
+        <button class="btn-ord" onclick="moverMed(${i},-1)" ${i===0?'disabled':''} title="Subir">▲</button>
+        <button class="btn-ord" onclick="moverMed(${i},1)" ${i===lista.length-1?'disabled':''} title="Bajar">▼</button>
+      </div>
+      <button class="btn-rm" onclick="quitarMed(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function moverMed(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= lista.length) return;
+  [lista[i], lista[j]] = [lista[j], lista[i]];
+  renderLista();
+}
+function quitarMed(i) { lista.splice(i,1); renderLista(); }
+function limpiar() {
+  if(!confirm('¿Limpiar la receta? (Se borrarán paciente y medicamentos; los datos del médico se conservan)')) return;
+  lista=[];renderLista();
+  ['pac-nombre','pac-edad','pac-fnac','pac-dx','notas'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const fechaEl=document.getElementById('pac-fecha');
+  if(fechaEl) fechaEl.value=new Date().toISOString().split('T')[0];
+  generarNumReceta();
+}
+
+/* ══════════════════════════════════════════
+   VISTA PREVIA
+══════════════════════════════════════════ */
+function verReceta() {
+  if (!lista.length) { alert('Agrega al menos un medicamento.'); return; }
+
+  const inst   = document.getElementById('inst-nombre').value || 'Institución Médica';
+  const instDir= document.getElementById('inst-dir').value || '';
+  const docN   = document.getElementById('doc-nombre').value || '—';
+  const docEsp = document.getElementById('doc-esp').value || '';
+  const docCed = document.getElementById('doc-cedula').value || '—';
+  const docUni = document.getElementById('doc-uni').value || '';
+  const pacN   = document.getElementById('pac-nombre').value || '—';
+  const pacE   = document.getElementById('pac-edad').value || '—';
+  const pacFN  = document.getElementById('pac-fnac').value || '—';
+  const fechaV = document.getElementById('pac-fecha').value;
+  const notas  = document.getElementById('notas').value;
+  const dx     = document.getElementById('pac-dx').value.trim();
+  const numRx  = document.getElementById('num-receta').value || '';
+
+  const fmtDate = s => s ? new Date(s+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+
+  // ─── Decide verbo + cantidad según forma farmacéutica ───
+  const accionPorForma = (forma, nombre = '') => {
+    const f = (forma || '').toLowerCase();
+    const n = (nombre || '').toLowerCase();
+
+    // Caso especial: compresas, fomentos, vendajes (no es un fármaco como tal)
+    if (n.includes('compresa') || n.includes('fomento') || n.includes('vendaje')) {
+      return { verbo: 'APLICAR', cantidad: '' };
+    }
+
+    // ─ Tópicos
+    if (f.includes('ungüento') || f.includes('unguento') || f.includes('crema') ||
+        f.includes('gel')      || f.includes('loción')   || f.includes('locion')) {
+      return { verbo: 'APLICAR', cantidad: 'UNA CAPA DELGADA' };
+    }
+    if (f.includes('parche'))                          return { verbo: 'APLICAR', cantidad: '1 PARCHE' };
+    if (f.includes('champú') || f.includes('champu')) return { verbo: 'APLICAR', cantidad: '' };
+
+    // ─ Spray nasal y gotas
+    if (f.includes('spray nasal'))                                             return { verbo: 'APLICAR',  cantidad: '1 NEBULIZACIÓN EN CADA FOSA NASAL' };
+    if (f.includes('gotas oftálmicas') || f.includes('gotas oftalmicas'))     return { verbo: 'INSTILAR', cantidad: '1 GOTA EN CADA OJO' };
+    if (f.includes('gotas óticas')     || f.includes('gotas oticas'))         return { verbo: 'INSTILAR', cantidad: '2 GOTAS EN EL OÍDO AFECTADO' };
+    if (f.includes('gotas nasales'))                                           return { verbo: 'INSTILAR', cantidad: '2 GOTAS EN CADA FOSA NASAL' };
+    if (f.includes('gotas'))                                                   return { verbo: 'TOMAR',    cantidad: '20 GOTAS' };
+
+    // ─ Inhaladores
+    if (f.includes('inhalador') || f.includes('nebulización') || f.includes('nebulizacion'))
+                                                       return { verbo: 'INHALAR', cantidad: '2 PUFFS' };
+
+    // ─ Inyectables, supositorios, óvulos
+    if (f.includes('inyectable'))                      return { verbo: 'ADMINISTRAR', cantidad: '1 AMPOLLETA' };
+    if (f.includes('supositorio'))                     return { verbo: 'ADMINISTRAR', cantidad: '1 SUPOSITORIO' };
+    if (f.includes('óvulo') || f.includes('ovulo'))   return { verbo: 'ADMINISTRAR', cantidad: '1 ÓVULO' };
+
+    // ─ Orales líquidos
+    if (f.includes('jarabe'))                          return { verbo: 'TOMAR', cantidad: '1 CUCHARADITA (5 ML)' };
+    if (f.includes('suspensión') || f.includes('suspension')) return { verbo: 'TOMAR', cantidad: '1 CUCHARADITA (5 ML)' };
+    if (f.includes('solución')   || f.includes('solucion'))   return { verbo: 'TOMAR', cantidad: '5 ML' };
+    if (f.includes('sobre'))                           return { verbo: 'TOMAR', cantidad: '1 SOBRE DISUELTO EN AGUA' };
+    if (f.includes('polvo'))                           return { verbo: 'TOMAR', cantidad: '1 SOBRE DISUELTO EN AGUA' };
+
+    // ─ Orales sólidos
+    if (f.includes('cápsula') || f.includes('capsula')) return { verbo: 'TOMAR', cantidad: '1 CÁPSULA' };
+    if (f.includes('tableta'))                          return { verbo: 'TOMAR', cantidad: '1 TABLETA' };
+    if (f.includes('comprimido'))                       return { verbo: 'TOMAR', cantidad: '1 COMPRIMIDO' };
+
+    // Default conservador
+    return { verbo: 'TOMAR', cantidad: '1 DOSIS' };
+  };
+
+  const medsHtml = lista.map((m,i) => {
+    const { verbo, cantidad } = accionPorForma(m.forma, m.nombre);
+    const accion = cantidad ? `${verbo} ${cantidad}` : verbo;
+    return `
+    <div class="r-med">
+      <div class="r-med-name">${m.nombre} ${m.dosis} ${m.forma}</div>
+      <div class="r-med-ind">
+        ${accion} ${m.freq.toUpperCase()} POR ${m.dur.toUpperCase()}.
+        ${m.ind ? m.ind.toUpperCase()+'.' : ''}
+      </div>
+    </div>
+  `;
+  }).join('');
+
+  document.getElementById('receta-out').innerHTML = `
+    <div class="r-top">
+      <div class="r-logo-l">🏫</div>
+      <div class="r-inst">
+        <h2>${inst.toUpperCase()}</h2>
+        <h3>Centro de Estudios y Servicios en Salud</h3>
+      </div>
+      <div class="r-logo-r">⚕️</div>
+    </div>
+
+    <div class="r-aviso-wrap">
+      <span class="r-aviso">RECETA MÉDICA — "ESTA RECETA NO ES UN JUSTIFICANTE MÉDICO"</span>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <div style="font-size:.72rem;color:var(--muted)">${numRx ? `<strong style="color:var(--navy2)">${numRx}</strong>` : ''}</div>
+      <div class="r-fecha" style="margin-bottom:0">Fecha: ${fmtDate(fechaV)}</div>
+    </div>
+
+    <div class="r-pac">
+      <div><span>Nombre del paciente:</span><br><strong>${pacN}</strong></div>
+      <div><span>Edad:</span><br><strong>${pacE}</strong></div>
+      <div><span>Fecha de nacimiento:</span><br><strong>${pacFN}</strong></div>
+      ${dx ? `<div style="flex-basis:100%"><span>Diagnóstico:</span><br><strong>${escHtml(dx)}</strong></div>` : ''}
+    </div>
+
+    <p class="r-rx-title">Rx — Medicamentos prescritos</p>
+
+    <div class="r-meds-wrap">
+      ${medsHtml}
+      ${notas ? `<div class="r-notas"><strong>Indicaciones generales</strong>${escHtml(notas)}</div>` : ''}
+      <div class="r-footer">
+        <div>
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:40px;">Nombre, cédula, universidad y firma del Dr.(a) en turno:</div>
+          <div class="r-footer-addr">${instDir}</div>
+        </div>
+        <div class="r-firma">
+          <div class="r-firma-line"></div>
+          <strong>${docN}</strong><br>
+          ${docEsp ? docEsp+'<br>' : ''}
+          P. Ced. Prof: ${docCed}<br>
+          ${docUni}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('overlay').classList.add('show');
+}
+
+/* ══════════════════════════════════════════
+   ENTRADA MANUAL DE MEDICAMENTO
+══════════════════════════════════════════ */
+function abrirManual(nombre) {
+  dd.style.display = 'none';
+  document.getElementById('m-nombre').value = nombre || inp.value.trim();
+  document.getElementById('m-dosis').value = '';
+  document.getElementById('m-cat').value = '';
+  const modal = document.getElementById('modal-manual');
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('m-dosis').focus(), 100);
+}
+
+function cerrarManual() {
+  document.getElementById('modal-manual').style.display = 'none';
+}
+
+function guardarManual() {
+  const nombre = document.getElementById('m-nombre').value.trim();
+  const dosisRaw = document.getElementById('m-dosis').value.trim();
+  const forma = document.getElementById('m-forma').value;
+  const cat = document.getElementById('m-cat').value.trim() || 'Medicamento';
+
+  if (!nombre) { alert('Escribe el nombre del medicamento.'); return; }
+
+  const dosis = dosisRaw
+    ? dosisRaw.split(',').map(d => d.trim()).filter(Boolean)
+    : ['Según indicación'];
+
+  // Guardar en DB para que funcione como cualquier otro
+  DB[nombre] = { dosis, cat, forma };
+
+  cerrarManual();
+  inp.value = nombre;
+  selMed(nombre, false);
+}
+
+function imprimirReceta() {
+  document.body.classList.add('printing');
+  window.print();
+  setTimeout(() => document.body.classList.remove('printing'), 500);
+}
+
+// Datos del médico por defecto
+document.getElementById('doc-nombre').value  = 'Dr. Luis Alejandro Hernandez Flores';
+document.getElementById('doc-esp').value     = 'Médico General';
+document.getElementById('doc-cedula').value  = 'A45404';
+document.getElementById('doc-uni').value     = 'Universidad Veracruzana';
+
+// Fecha de hoy por default
+document.getElementById('pac-fecha').value = new Date().toISOString().split('T')[0];
+
+/* ══════════════════════════════════════════
+   NÚMERO DE RECETA AUTOGENERADO
+══════════════════════════════════════════ */
+function generarNumReceta() {
+  const fecha = new Date();
+  const yy  = String(fecha.getFullYear()).slice(2);
+  const mm  = String(fecha.getMonth()+1).padStart(2,'0');
+  const dd  = String(fecha.getDate()).padStart(2,'0');
+  const rand = String(Math.floor(Math.random()*9000)+1000);
+  document.getElementById('num-receta').value = `RX-${yy}${mm}${dd}-${rand}`;
+}
+generarNumReceta(); // Generar al cargar
+
+/* ══════════════════════════════════════════
+   CÁLCULO AUTOMÁTICO DE EDAD
+══════════════════════════════════════════ */
+function calcularEdad(fnacStr) {
+  // Acepta formato DD/MM/AAAA
+  if (!fnacStr || fnacStr.length < 10) return '';
+  const partes = fnacStr.split('/');
+  if (partes.length !== 3) return '';
+  const [d, m, a] = partes.map(Number);
+  if (!d || !m || !a || a < 1900) return '';
+  const hoy = new Date();
+  let edad = hoy.getFullYear() - a;
+  const cumple = new Date(hoy.getFullYear(), m-1, d);
+  if (hoy < cumple) edad--;
+  if (edad < 0 || edad > 120) return '';
+  return edad < 2
+    ? `${Math.floor((hoy - new Date(a, m-1, d)) / (1000*60*60*24*30.44))} meses`
+    : `${edad} años`;
+}
+
+document.getElementById('pac-fnac').addEventListener('input', function() {
+  const edad = calcularEdad(this.value);
+  document.getElementById('pac-edad').value = edad;
+});
+
+/* ══════════════════════════════════════════
+   AUTO-FORMATO FECHA DE NACIMIENTO (DD/MM/AAAA)
+   El usuario escribe 25061996 y el campo va mostrando
+   25, 25/0, 25/06, 25/06/1, ..., 25/06/1996
+══════════════════════════════════════════ */
+(function () {
+  const fnac = document.getElementById('pac-fnac');
+  if (!fnac) return;
+
+  fnac.setAttribute('inputmode', 'numeric');
+  fnac.setAttribute('maxlength', '10');
+
+  fnac.addEventListener('input', (e) => {
+    // Solo dígitos, máximo 8
+    let v = e.target.value.replace(/\D/g, '').slice(0, 8);
+    let out = v;
+    if (v.length >= 5)      out = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
+    else if (v.length >= 3) out = v.slice(0,2) + '/' + v.slice(2);
+    e.target.value = out;
+  });
+
+  // Permitir borrar las "/" naturalmente con backspace
+  fnac.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace') {
+      const pos = e.target.selectionStart;
+      if (pos > 0 && e.target.value[pos - 1] === '/') {
+        e.preventDefault();
+        const v = e.target.value;
+        e.target.value = v.slice(0, pos - 1) + v.slice(pos);
+        e.target.setSelectionRange(pos - 1, pos - 1);
+        // Disparar input para reformatear
+        e.target.dispatchEvent(new Event('input'));
+      }
+    }
+  });
+})();
+</script>
+
+<!-- ══ FIREBASE AUTH ══ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script>
+(function() {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCziKdP5V_DxvL-VD3I2Hm9rgJygf9j0kc",
+    authDomain: "recetamedica-6b0fe.firebaseapp.com",
+    projectId: "recetamedica-6b0fe",
+    storageBucket: "recetamedica-6b0fe.firebasestorage.app",
+    messagingSenderId: "646072775478",
+    appId: "1:646072775478:web:c4c798bb7cb5452148f997"
+  });
+
+  const auth = firebase.auth();
+  const APP_URL = 'https://recetamedicaprueba.netlify.app';
+
+  const actionCodeSettings = {
+    url: APP_URL,
+    handleCodeInApp: true
+  };
+
+  function mostrarLogin() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-root').style.display = 'none';
+  }
+
+  function ocultarLogin(email) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-root').style.display = 'block';
+    const badge = document.getElementById('user-badge');
+    if (badge) badge.textContent = email;
+  }
+
+  // ── Verificar si viene de un magic link ──
+  if (auth.isSignInWithEmailLink(window.location.href)) {
+    let email = window.localStorage.getItem('emailParaLogin');
+    if (!email) {
+      email = window.prompt('Confirma tu correo para completar el acceso:');
+    }
+    auth.signInWithEmailLink(email, window.location.href)
+      .then(() => {
+        window.localStorage.removeItem('emailParaLogin');
+        window.history.replaceState({}, document.title, APP_URL);
+      })
+      .catch(() => {
+        document.getElementById('login-error').textContent = 'Error al verificar el enlace. Intenta de nuevo.';
+        document.getElementById('login-error').style.display = 'block';
+        mostrarLogin();
+      });
+  }
+
+  // ── Estado de autenticación ──
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      ocultarLogin(user.email);
+    } else {
+      mostrarLogin();
+    }
+  });
+
+  // ── Enviar magic link ──
+  window.enviarMagicLink = async function() {
+    const email = document.getElementById('login-email').value.trim();
+    const btn   = document.getElementById('btn-login');
+    const err   = document.getElementById('login-error');
+    const ok    = document.getElementById('login-ok');
+
+    if (!email || !email.includes('@')) {
+      err.textContent = 'Ingresa un correo válido.';
+      err.style.display = 'block';
+      ok.style.display = 'none';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    err.style.display = 'none';
+
+    try {
+      await auth.sendSignInLinkToEmail(email, actionCodeSettings);
+      window.localStorage.setItem('emailParaLogin', email);
+      ok.style.display = 'block';
+      ok.textContent = `✅ Enlace enviado a ${email} — revisa tu correo o spam.`;
+      btn.textContent = 'Reenviar enlace';
+      btn.disabled = false;
+    } catch(e) {
+      err.textContent = 'Error: ' + (e.message || 'Intenta de nuevo.');
+      err.style.display = 'block';
+      btn.textContent = 'Enviar enlace de acceso';
+      btn.disabled = false;
+    }
+  };
+
+  // ── Cerrar sesión ──
+  window.cerrarSesion = async function() {
+    if (confirm('¿Cerrar sesión?')) {
+      await auth.signOut();
+    }
+  };
+})();
+</script>
+
+</div><!-- fin app-root -->
+</body>
+</html>
