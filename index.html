@@ -2131,9 +2131,25 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
   }
 
   // ── Estado de autenticación ──
-  auth.onAuthStateChanged(user => {
+  auth.onAuthStateChanged(async user => {
     if (user) {
-      ocultarLogin(user);
+      // Verificar si el correo está autorizado
+      const db = firebase.firestore();
+      const snap = await db.collection('autorizados')
+        .where('email', '==', user.email)
+        .get();
+
+      if (snap.empty) {
+        // No autorizado — mostrar pantalla de acceso denegado
+        await auth.signOut();
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('app-root').style.display = 'none';
+        document.getElementById('login-error').textContent = '⛔ Tu correo no está autorizado para usar esta app. Contacta al administrador.';
+        document.getElementById('login-error').style.display = 'block';
+        document.getElementById('login-ok').style.display = 'none';
+      } else {
+        ocultarLogin(user);
+      }
     } else {
       mostrarLogin();
     }
