@@ -1555,6 +1555,7 @@ function verReceta() {
         </div>
         <div class="r-firma">
           <div class="r-firma-line"></div>
+          ${window.firmaDataURL ? `<img src="${window.firmaDataURL}" style="height:55px;max-width:180px;object-fit:contain;display:block;margin:0 auto 4px;" />` : ''}
           <strong>${docN}</strong><br>
           ${docEsp ? docEsp+'<br>' : ''}
           P. Ced. Prof: ${docCed}<br>
@@ -1740,6 +1741,17 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
       <div class="field"><label>Universidad</label><input id="p-uni" placeholder="Universidad Veracruzana" /></div>
       <div class="field"><label>Institución / Clínica</label><input id="p-inst" placeholder="Universidad Veracruzana — CESS" /></div>
       <div class="field"><label>Dirección del consultorio</label><input id="p-dir" placeholder="Calle, Número, Ciudad" /></div>
+
+      <!-- FIRMA CON S PEN / DEDO -->
+      <div class="field">
+        <label>Firma digital <span style="color:var(--muted);font-weight:400">(usa el S Pen o dedo)</span></label>
+        <div style="border:2px solid var(--border);border-radius:8px;background:#fafafa;position:relative;">
+          <canvas id="firma-canvas" width="400" height="140" style="width:100%;height:140px;display:block;cursor:crosshair;touch-action:none;border-radius:6px;"></canvas>
+          <button onclick="limpiarFirma()" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,.9);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:.72rem;cursor:pointer;color:var(--muted);">🗑 Limpiar</button>
+        </div>
+        <span style="font-size:.72rem;color:var(--muted);">Firma aquí arriba — aparecerá en todas tus recetas</span>
+      </div>
+
       <button id="btn-guardar-perfil" onclick="guardarPerfilMedico()" style="background:var(--green);color:white;border:none;border-radius:9px;padding:13px;font-family:'Source Sans 3',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:4px;">
         ✅ Guardar y comenzar
       </button>
@@ -1800,6 +1812,7 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
       document.getElementById('doc-uni').value     = data.uni     || '';
       document.getElementById('inst-nombre').value = data.inst    || 'Universidad Veracruzana — CESS';
       document.getElementById('inst-dir').value    = data.dir     || '';
+      window.firmaDataURL = data.firma || '';
       bloquearCamposMedico();
     } else {
       // Primera vez — mostrar modal de configuración
@@ -1828,9 +1841,58 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
     if (btn) btn.style.display = 'inline-flex';
   }
 
+  // ── Canvas de firma ──
+  let firmaCanvas, firmaCtx, dibujando = false, firmaGuardada = '';
+
+  function initFirmaCanvas() {
+    firmaCanvas = document.getElementById('firma-canvas');
+    if (!firmaCanvas) return;
+    firmaCtx = firmaCanvas.getContext('2d');
+    firmaCtx.strokeStyle = '#1a3a6b';
+    firmaCtx.lineWidth = 2.5;
+    firmaCtx.lineCap = 'round';
+    firmaCtx.lineJoin = 'round';
+
+    const getPos = e => {
+      const rect = firmaCanvas.getBoundingClientRect();
+      const scaleX = firmaCanvas.width / rect.width;
+      const scaleY = firmaCanvas.height / rect.height;
+      const src = e.touches ? e.touches[0] : e;
+      return {
+        x: (src.clientX - rect.left) * scaleX,
+        y: (src.clientY - rect.top) * scaleY
+      };
+    };
+
+    const start = e => { e.preventDefault(); dibujando = true; const p = getPos(e); firmaCtx.beginPath(); firmaCtx.moveTo(p.x, p.y); };
+    const draw  = e => { e.preventDefault(); if (!dibujando) return; const p = getPos(e); firmaCtx.lineTo(p.x, p.y); firmaCtx.stroke(); };
+    const stop  = e => { dibujando = false; };
+
+    firmaCanvas.addEventListener('mousedown',  start);
+    firmaCanvas.addEventListener('mousemove',  draw);
+    firmaCanvas.addEventListener('mouseup',    stop);
+    firmaCanvas.addEventListener('mouseleave', stop);
+    firmaCanvas.addEventListener('touchstart', start, { passive: false });
+    firmaCanvas.addEventListener('touchmove',  draw,  { passive: false });
+    firmaCanvas.addEventListener('touchend',   stop);
+  }
+
+  window.limpiarFirma = function() {
+    if (firmaCtx) firmaCtx.clearRect(0, 0, firmaCanvas.width, firmaCanvas.height);
+  };
+
+  function getFirmaBase64() {
+    if (!firmaCanvas) return '';
+    // Verificar si el canvas tiene algo dibujado
+    const data = firmaCtx.getImageData(0, 0, firmaCanvas.width, firmaCanvas.height).data;
+    const tieneTrazos = data.some(v => v !== 0);
+    return tieneTrazos ? firmaCanvas.toDataURL('image/png') : '';
+  }
+
   // ── Mostrar modal de primer perfil ──
   function mostrarModalPerfil() {
     document.getElementById('modal-perfil').style.display = 'flex';
+    setTimeout(initFirmaCanvas, 100);
   }
 
   // ── Guardar perfil del médico ──
@@ -1857,6 +1919,7 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
     try {
       await db.collection('medicos').doc(user.uid).set({
         nombre, esp, cedula, uni, inst, dir,
+        firma: getFirmaBase64(),
         email: user.email,
         creadoEn: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -1903,6 +1966,7 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
     btn.disabled = true;
     btn.textContent = 'Guardando...';
     try {
+      const nuevaFirma = getFirmaBase64();
       await db.collection('medicos').doc(user.uid).update({
         nombre: document.getElementById('doc-nombre').value.trim(),
         esp:    document.getElementById('doc-esp').value.trim(),
@@ -1910,7 +1974,9 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
         uni:    document.getElementById('doc-uni').value.trim(),
         inst:   document.getElementById('inst-nombre').value.trim(),
         dir:    document.getElementById('inst-dir').value.trim(),
+        ...(nuevaFirma ? { firma: nuevaFirma } : {})
       });
+      if (nuevaFirma) window.firmaDataURL = nuevaFirma;
       bloquearCamposMedico();
       btn.style.display = 'none';
     } catch(e) {
