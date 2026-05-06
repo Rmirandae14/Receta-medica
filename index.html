@@ -389,7 +389,9 @@ body:has(#overlay.show) .dropdown { display: none !important; }
   @page { margin: 1cm; size: A4; }
 }
 
-/* ── HISTORIAL ── */
+/* ── TOAST ── */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1a3a6b; color:white; padding:12px 22px; border-radius:10px; font-size:.88rem; font-family:'Source Sans 3',sans-serif; z-index:99999; box-shadow:0 4px 20px rgba(0,0,0,.3); opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap; }
+.toast.show { opacity:1; }
 .h-item { padding:13px 16px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:4px; cursor:pointer; transition:background .15s; }
 .h-item:last-child { border-bottom:none; }
 .h-item:hover { background:var(--cream2); }
@@ -1299,6 +1301,14 @@ function agregarMed() {
   resetMedState();
 }
 
+function mostrarToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
 function renderLista() {
   const el = document.getElementById('med-list');
   if (!lista.length) { el.innerHTML='<div class="empty">Aún no hay medicamentos agregados</div>'; return; }
@@ -1399,11 +1409,23 @@ async function cargarRecetaHistorial(id) {
   document.getElementById('notas').value      = d.notas || '';
   document.getElementById('num-receta').value = d.numRx || '';
 
-  // Limpiar lista de medicamentos (no se pueden restaurar objetos completos desde el string guardado)
-  lista = [];
-  renderLista();
-
-  alert(`✅ Datos de ${d.paciente || 'paciente'} cargados.\n\nNota: los medicamentos deben agregarse nuevamente ya que solo se guarda el resumen en el historial.`);
+  // Cargar medicamentos completos si existen
+  if (d.medicamentosCompletos && d.medicamentosCompletos.length) {
+    lista = d.medicamentosCompletos.map(m => ({
+      nombre: m.nombre || '',
+      dosis:  m.dosis  || '',
+      forma:  m.forma  || '',
+      freq:   m.freq   || '',
+      dur:    m.dur    || '',
+      ind:    m.ind    || ''
+    }));
+    renderLista();
+    mostrarToast(`✅ Receta de ${d.paciente || 'paciente'} cargada con ${lista.length} medicamento(s)`);
+  } else {
+    lista = [];
+    renderLista();
+    mostrarToast(`✅ Datos cargados — agrega los medicamentos manualmente`);
+  }
 
   // Scroll al inicio
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1592,6 +1614,14 @@ function verReceta() {
             dx: dx || '',
             fecha: fechaV,
             medicamentos: lista.map(m => `${m.nombre} ${m.dosis} ${m.forma}`).join(', '),
+            medicamentosCompletos: lista.map(m => ({
+              nombre: m.nombre,
+              dosis:  m.dosis,
+              forma:  m.forma,
+              freq:   m.freq,
+              dur:    m.dur,
+              ind:    m.ind || ''
+            })),
             notas: notas || '',
             creadoEn: firebase.firestore.FieldValue.serverTimestamp()
           }).catch(() => {});
@@ -2085,5 +2115,8 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
 </script>
 
 </div><!-- fin app-root -->
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
 </body>
 </html>
