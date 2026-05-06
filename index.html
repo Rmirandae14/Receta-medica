@@ -581,7 +581,7 @@ body:has(#overlay.show) .dropdown { display: none !important; }
   <div class="pbox">
     <div class="pbox-top">
       <span>Vista previa — Receta Médica</span>
-      <button class="btn-impr" onclick="imprimirReceta()">🖨 Imprimir</button>
+      <button class="btn-impr" onclick="imprimirReceta()" id="btn-imprimir">🖨 Imprimir / PDF</button>
       <button class="btn-cerrar" onclick="document.getElementById('overlay').classList.remove('show')">✕ Cerrar</button>
     </div>
     <div class="print-tip">
@@ -1745,24 +1745,37 @@ function guardarManual() {
 }
 
 function imprimirReceta() {
-  // Ocultar todo excepto la receta
-  const recetaOut = document.getElementById('receta-out');
-  const original = document.body.innerHTML;
+  const esMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  const elemento = document.getElementById('receta-out');
+  const btn = document.getElementById('btn-imprimir');
 
-  // Clonar solo el contenido de la receta
-  const solo = recetaOut.cloneNode(true);
-  document.body.innerHTML = '';
-  document.body.style.cssText = 'margin:0;padding:0;background:white;';
-  document.body.appendChild(solo);
+  if (esMobile && typeof html2pdf !== 'undefined') {
+    btn.textContent = '⏳ Generando PDF...';
+    btn.disabled = true;
 
-  window.print();
+    const numRx = document.getElementById('num-receta').value || 'receta';
+    const opciones = {
+      margin:      [10, 10, 10, 10],
+      filename:    `${numRx}.pdf`,
+      image:       { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
 
-  // Restaurar
-  document.body.innerHTML = original;
-  document.body.style.cssText = '';
-
-  // Reiniciar eventos
-  location.reload();
+    html2pdf().set(opciones).from(elemento).save().then(() => {
+      btn.textContent = '🖨 Imprimir / PDF';
+      btn.disabled = false;
+    });
+  } else {
+    // PC: usar body swap
+    const recetaOut = document.getElementById('receta-out');
+    const clone = recetaOut.cloneNode(true);
+    document.body.innerHTML = '';
+    document.body.style.cssText = 'margin:0;padding:0;background:white;';
+    document.body.appendChild(clone);
+    window.print();
+    location.reload();
+  }
 }
 
 // Datos del médico por defecto
@@ -1883,6 +1896,9 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
     </div>
   </div>
 </div>
+
+<!-- html2pdf para móvil -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <!-- ══ FIREBASE AUTH ══ -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
