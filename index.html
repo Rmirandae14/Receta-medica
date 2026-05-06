@@ -443,6 +443,8 @@ body:has(#overlay.show) .dropdown { display: none !important; }
           <input id="num-receta" style="width:140px;background:var(--cream2);font-weight:700;color:var(--navy2)" readonly />
         </div>
         <button onclick="generarNumReceta()" style="margin-top:16px;background:var(--navy);color:var(--white);border:none;border-radius:7px;padding:9px 14px;font-family:'Source Sans 3',sans-serif;font-size:.8rem;cursor:pointer;">🔄 Regenerar</button>
+        <button id="btn-editar-perfil" onclick="editarPerfil()" style="display:none;margin-top:16px;background:var(--gold);color:var(--navy2);border:none;border-radius:7px;padding:9px 14px;font-family:'Source Sans 3',sans-serif;font-size:.8rem;cursor:pointer;font-weight:700;">✏️ Editar mis datos</button>
+        <button id="btn-guardar-cambios" onclick="guardarCambiosPerfil()" style="display:none;margin-top:16px;background:var(--green);color:white;border:none;border-radius:7px;padding:9px 14px;font-family:'Source Sans 3',sans-serif;font-size:.8rem;cursor:pointer;font-weight:700;">💾 Guardar cambios</button>
       </div>
     </div>
   </div>
@@ -1576,9 +1578,33 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
 })();
 </script>
 
+<!-- ══ MODAL PERFIL MÉDICO (primera vez) ══ -->
+<div id="modal-perfil" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99998;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;border-radius:16px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.4);">
+    <div style="background:var(--navy);padding:16px 20px;border-bottom:2px solid var(--gold);">
+      <div style="color:var(--cream);font-family:'Libre Baskerville',serif;font-size:1rem;font-weight:700;">👨‍⚕️ Configura tu perfil médico</div>
+      <div style="color:var(--gold-lt);font-size:.78rem;margin-top:3px;">Solo se hace una vez — queda guardado permanentemente</div>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+      <div class="field"><label>Nombre completo del médico *</label><input id="p-nombre" placeholder="Dr. Juan Pérez García" /></div>
+      <div class="g2">
+        <div class="field"><label>Especialidad</label><input id="p-esp" placeholder="Médico General" /></div>
+        <div class="field"><label>Cédula profesional *</label><input id="p-cedula" placeholder="12345678" /></div>
+      </div>
+      <div class="field"><label>Universidad</label><input id="p-uni" placeholder="Universidad Veracruzana" /></div>
+      <div class="field"><label>Institución / Clínica</label><input id="p-inst" placeholder="Universidad Veracruzana — CESS" /></div>
+      <div class="field"><label>Dirección del consultorio</label><input id="p-dir" placeholder="Calle, Número, Ciudad" /></div>
+      <button id="btn-guardar-perfil" onclick="guardarPerfilMedico()" style="background:var(--green);color:white;border:none;border-radius:9px;padding:13px;font-family:'Source Sans 3',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:4px;">
+        ✅ Guardar y comenzar
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ FIREBASE AUTH ══ -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 (function() {
   firebase.initializeApp({
@@ -1591,6 +1617,7 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
   });
 
   const auth = firebase.auth();
+  const db   = firebase.firestore();
   const APP_URL = 'https://recetamedica-cess.netlify.app';
 
   const actionCodeSettings = {
@@ -1603,12 +1630,149 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
     document.getElementById('app-root').style.display = 'none';
   }
 
-  function ocultarLogin(email) {
+  async function ocultarLogin(user) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-root').style.display = 'block';
     const badge = document.getElementById('user-badge');
-    if (badge) badge.textContent = email;
+    if (badge) badge.textContent = user.email;
+
+    // Cargar o configurar perfil del médico
+    await cargarPerfilMedico(user);
   }
+
+  // ── Cargar perfil del médico desde Firestore ──
+  async function cargarPerfilMedico(user) {
+    const docRef = db.collection('medicos').doc(user.uid);
+    const docSnap = await docRef.get();
+
+    if (docSnap.exists) {
+      // Ya tiene perfil — cargar datos y bloquear campos
+      const data = docSnap.data();
+      document.getElementById('doc-nombre').value  = data.nombre  || '';
+      document.getElementById('doc-esp').value     = data.esp     || '';
+      document.getElementById('doc-cedula').value  = data.cedula  || '';
+      document.getElementById('doc-uni').value     = data.uni     || '';
+      document.getElementById('inst-nombre').value = data.inst    || 'Universidad Veracruzana — CESS';
+      document.getElementById('inst-dir').value    = data.dir     || '';
+      bloquearCamposMedico();
+    } else {
+      // Primera vez — mostrar modal de configuración
+      document.getElementById('doc-nombre').value = '';
+      document.getElementById('doc-esp').value    = '';
+      document.getElementById('doc-cedula').value = '';
+      document.getElementById('doc-uni').value    = '';
+      mostrarModalPerfil();
+    }
+  }
+
+  // ── Bloquear campos del médico ──
+  function bloquearCamposMedico() {
+    const ids = ['doc-nombre','doc-esp','doc-cedula','doc-uni','inst-nombre','inst-dir'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.readOnly = true;
+        el.style.background = 'var(--cream2)';
+        el.style.color = 'var(--muted)';
+        el.style.cursor = 'not-allowed';
+      }
+    });
+    // Mostrar botón de editar perfil
+    const btn = document.getElementById('btn-editar-perfil');
+    if (btn) btn.style.display = 'inline-flex';
+  }
+
+  // ── Mostrar modal de primer perfil ──
+  function mostrarModalPerfil() {
+    document.getElementById('modal-perfil').style.display = 'flex';
+  }
+
+  // ── Guardar perfil del médico ──
+  window.guardarPerfilMedico = async function() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const nombre = document.getElementById('p-nombre').value.trim();
+    const esp    = document.getElementById('p-esp').value.trim();
+    const cedula = document.getElementById('p-cedula').value.trim();
+    const uni    = document.getElementById('p-uni').value.trim();
+    const inst   = document.getElementById('p-inst').value.trim();
+    const dir    = document.getElementById('p-dir').value.trim();
+
+    if (!nombre || !cedula) {
+      alert('El nombre y la cédula son obligatorios.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-guardar-perfil');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+
+    try {
+      await db.collection('medicos').doc(user.uid).set({
+        nombre, esp, cedula, uni, inst, dir,
+        email: user.email,
+        creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Cargar en la interfaz
+      document.getElementById('doc-nombre').value  = nombre;
+      document.getElementById('doc-esp').value     = esp;
+      document.getElementById('doc-cedula').value  = cedula;
+      document.getElementById('doc-uni').value     = uni;
+      document.getElementById('inst-nombre').value = inst || 'Universidad Veracruzana — CESS';
+      document.getElementById('inst-dir').value    = dir;
+
+      bloquearCamposMedico();
+      document.getElementById('modal-perfil').style.display = 'none';
+    } catch(e) {
+      alert('Error al guardar: ' + e.message);
+      btn.disabled = false;
+      btn.textContent = 'Guardar perfil';
+    }
+  };
+
+  // ── Editar perfil (desbloquear temporalmente) ──
+  window.editarPerfil = function() {
+    if (!confirm('¿Deseas editar tus datos? Los cambios se guardarán en tu perfil.')) return;
+    const ids = ['doc-nombre','doc-esp','doc-cedula','doc-uni','inst-nombre','inst-dir'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.readOnly = false;
+        el.style.background = '';
+        el.style.color = '';
+        el.style.cursor = '';
+      }
+    });
+    document.getElementById('btn-guardar-cambios').style.display = 'inline-flex';
+    document.getElementById('btn-editar-perfil').style.display = 'none';
+  };
+
+  // ── Guardar cambios de perfil directo desde la interfaz ──
+  window.guardarCambiosPerfil = async function() {
+    const user = auth.currentUser;
+    if (!user) return;
+    const btn = document.getElementById('btn-guardar-cambios');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+    try {
+      await db.collection('medicos').doc(user.uid).update({
+        nombre: document.getElementById('doc-nombre').value.trim(),
+        esp:    document.getElementById('doc-esp').value.trim(),
+        cedula: document.getElementById('doc-cedula').value.trim(),
+        uni:    document.getElementById('doc-uni').value.trim(),
+        inst:   document.getElementById('inst-nombre').value.trim(),
+        dir:    document.getElementById('inst-dir').value.trim(),
+      });
+      bloquearCamposMedico();
+      btn.style.display = 'none';
+    } catch(e) {
+      alert('Error: ' + e.message);
+      btn.disabled = false;
+      btn.textContent = 'Guardar cambios';
+    }
+  };
 
   // ── Verificar si viene de un magic link ──
   if (auth.isSignInWithEmailLink(window.location.href)) {
@@ -1631,7 +1795,7 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
   // ── Estado de autenticación ──
   auth.onAuthStateChanged(user => {
     if (user) {
-      ocultarLogin(user.email);
+      ocultarLogin(user);
     } else {
       mostrarLogin();
     }
