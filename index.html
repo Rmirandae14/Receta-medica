@@ -1554,8 +1554,8 @@ function verReceta() {
           <div class="r-footer-addr">${instDir}</div>
         </div>
         <div class="r-firma">
+          ${window.firmaDataURL ? `<img src="${window.firmaDataURL}" style="height:55px;max-width:180px;object-fit:contain;display:block;margin:0 auto -8px;" />` : ''}
           <div class="r-firma-line"></div>
-          ${window.firmaDataURL ? `<img src="${window.firmaDataURL}" style="height:55px;max-width:180px;object-fit:contain;display:block;margin:0 auto 4px;" />` : ''}
           <strong>${docN}</strong><br>
           ${docEsp ? docEsp+'<br>' : ''}
           P. Ced. Prof: ${docCed}<br>
