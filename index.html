@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Receta Médica Digital — CESS</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a3a6b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RecetaMédica">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ── LOGIN SCREEN ── */
@@ -1783,6 +1789,11 @@ document.getElementById('doc-nombre').value  = 'Dr. Luis Alejandro Hernandez Flo
 document.getElementById('doc-esp').value     = 'Médico General';
 document.getElementById('doc-cedula').value  = 'A45404';
 document.getElementById('doc-uni').value     = 'Universidad Veracruzana';
+
+// Registrar Service Worker para PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 
 // Fecha de hoy por default
 document.getElementById('pac-fecha').value = new Date().toISOString().split('T')[0];
