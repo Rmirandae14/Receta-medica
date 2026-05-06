@@ -1423,13 +1423,12 @@ async function cargarMedicosAdmin() {
     const medicos  = {};
     medsSnap.docs.forEach(d => { medicos[d.data().email] = d.data(); });
 
-    // Cargar conteo de recetas por médico
-    const rxSnap = await db.collection('recetas').get();
+    // Contar recetas por médico individualmente
     const rxCount = {};
-    rxSnap.docs.forEach(d => {
-      const e = d.data().email;
-      if (e) rxCount[e] = (rxCount[e] || 0) + 1;
-    });
+    await Promise.all(autorizados.map(async a => {
+      const snap = await db.collection('recetas').where('email','==',a.email).get();
+      rxCount[a.email] = snap.size;
+    }));
 
     if (!autorizados.length) {
       lista.innerHTML = '<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px;">No hay correos autorizados</div>';
