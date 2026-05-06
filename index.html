@@ -1380,7 +1380,8 @@ async function cargarHistorial() {
           ${d.dx ? `<div class="h-dx">🩺 ${escHtml(d.dx)}</div>` : ''}
           <div class="h-meds">💊 ${escHtml(d.medicamentos || '—')}</div>
           <div style="display:flex;gap:8px;margin-top:6px">
-            <button onclick="cargarRecetaHistorial('${id}')" style="flex:1;background:var(--navy);color:white;border:none;border-radius:6px;padding:6px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">📋 Cargar en formulario</button>
+            <button onclick="verRecetaHistorial('${id}')" style="flex:1;background:var(--navy);color:white;border:none;border-radius:6px;padding:6px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">👁 Ver receta</button>
+            <button onclick="usarDiagnostico('${id}')" style="flex:1;background:var(--green);color:white;border:none;border-radius:6px;padding:6px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">📋 Usar diagnóstico</button>
             <button onclick="eliminarReceta('${id}')" style="background:#fde;color:#b33;border:1px solid #f5c6c6;border-radius:6px;padding:6px 10px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">🗑</button>
           </div>
         </div>
@@ -1390,6 +1391,72 @@ async function cargarHistorial() {
   } catch(e) {
     el.innerHTML = `<div class="empty" style="color:#b33">Error al cargar: ${e.message}</div>`;
   }
+}
+
+async function verRecetaHistorial(id) {
+  const db = firebase.firestore();
+  const doc = await db.collection('recetas').doc(id).get();
+  if (!doc.exists) { mostrarToast('❌ Receta no encontrada'); return; }
+  const d = doc.data();
+
+  // Cargar todos los datos incluyendo paciente
+  document.getElementById('pac-nombre').value = d.paciente || '';
+  document.getElementById('pac-edad').value   = d.edad || '';
+  document.getElementById('pac-fnac').value   = d.fnac || '';
+  document.getElementById('pac-dx').value     = d.dx || '';
+  document.getElementById('pac-fecha').value  = d.fecha || '';
+  document.getElementById('notas').value      = d.notas || '';
+  document.getElementById('num-receta').value = d.numRx || '';
+
+  if (d.medicamentosCompletos && d.medicamentosCompletos.length) {
+    lista = d.medicamentosCompletos.map(m => ({
+      nombre: m.nombre || '', dosis: m.dosis || '',
+      forma: m.forma || '', freq: m.freq || '',
+      dur: m.dur || '', ind: m.ind || ''
+    }));
+    renderLista();
+  }
+
+  // Abrir vista previa directamente
+  verReceta();
+}
+
+async function usarDiagnostico(id) {
+  const db = firebase.firestore();
+  const doc = await db.collection('recetas').doc(id).get();
+  if (!doc.exists) { mostrarToast('❌ Receta no encontrada'); return; }
+  const d = doc.data();
+
+  // Limpiar datos del paciente
+  document.getElementById('pac-nombre').value = '';
+  document.getElementById('pac-edad').value   = '';
+  document.getElementById('pac-fnac').value   = '';
+  document.getElementById('pac-fecha').value  = new Date().toISOString().split('T')[0];
+
+  // Cargar diagnóstico, medicamentos y notas
+  document.getElementById('pac-dx').value    = d.dx || '';
+  document.getElementById('notas').value     = d.notas || '';
+
+  // Generar número de receta nuevo
+  generarNumReceta();
+
+  // Cargar medicamentos completos
+  if (d.medicamentosCompletos && d.medicamentosCompletos.length) {
+    lista = d.medicamentosCompletos.map(m => ({
+      nombre: m.nombre || '', dosis: m.dosis || '',
+      forma: m.forma || '', freq: m.freq || '',
+      dur: m.dur || '', ind: m.ind || ''
+    }));
+    renderLista();
+    mostrarToast(`✅ Diagnóstico y ${lista.length} medicamento(s) cargados — agrega el paciente`);
+  } else {
+    lista = [];
+    renderLista();
+    mostrarToast(`✅ Diagnóstico cargado — agrega paciente y medicamentos`);
+  }
+
+  // Scroll al inicio para llenar paciente
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function cargarRecetaHistorial(id) {
