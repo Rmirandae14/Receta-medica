@@ -415,6 +415,15 @@ body:has(#overlay.show) .dropdown { display: none !important; }
     <button id="btn-login" onclick="enviarMagicLink()">✉️ Enviar enlace de acceso</button>
     <div id="login-error"></div>
     <div id="login-ok"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin:14px 0">
+      <div style="flex:1;height:1px;background:#e0ddd6"></div>
+      <span style="font-size:.75rem;color:#999">o</span>
+      <div style="flex:1;height:1px;background:#e0ddd6"></div>
+    </div>
+    <button id="btn-google" onclick="entrarConGoogle()" style="width:100%;padding:13px;background:white;color:#3c3c3c;border:1.5px solid #d4cfc2;border-radius:10px;font-size:.95rem;font-weight:600;font-family:'Source Sans 3',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s;">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;height:20px;" />
+      Entrar con Google
+    </button>
     <div class="login-footer">
       Recibirás un enlace en tu correo.<br>Da clic en él para entrar — sin contraseña.
     </div>
@@ -2154,6 +2163,22 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
       mostrarLogin();
     }
   });
+
+  // ── Entrar con Google ──
+  window.entrarConGoogle = async function() {
+    const btn = document.getElementById('btn-google');
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Conectando...';
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+    } catch(e) {
+      document.getElementById('login-error').textContent = 'Error al entrar con Google. Intenta de nuevo.';
+      document.getElementById('login-error').style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:20px;height:20px;" /> Entrar con Google';
+    }
+  };
 
   // ── Enviar magic link ──
   window.enviarMagicLink = async function() {
