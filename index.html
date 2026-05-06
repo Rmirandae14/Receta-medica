@@ -590,6 +590,20 @@ body:has(#overlay.show) .dropdown { display: none !important; }
     </div>
   </div>
 
+  <!-- ESTADÍSTICAS -->
+  <div class="sec">
+    <div class="sec-head">
+      <span class="ico">📊</span>
+      <h2>Estadísticas</h2>
+      <button onclick="cargarEstadisticas()" style="margin-left:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;border-radius:6px;padding:5px 12px;font-size:.78rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">📊 Calcular</button>
+    </div>
+    <div class="sec-body" style="padding:0">
+      <div id="estadisticas-content" style="padding:14px">
+        <div class="empty">Toca "Calcular" para ver tus estadísticas</div>
+      </div>
+    </div>
+  </div>
+
   <div class="actions">
     <button class="btn-s" onclick="limpiar()">🗑 Limpiar receta</button>
     <button class="btn-p" onclick="verReceta()">🖨 Vista previa e imprimir</button>
@@ -1536,6 +1550,105 @@ function renderHistorial(recetas) {
       </div>
     </div>
   `).join('');
+}
+
+async function cargarEstadisticas() {
+  const el = document.getElementById('estadisticas-content');
+  el.innerHTML = '<div class="empty">Calculando...</div>';
+
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  try {
+    const db = firebase.firestore();
+    const snap = await db.collection('recetas')
+      .where('uid', '==', user.uid)
+      .orderBy('creadoEn', 'desc')
+      .limit(200)
+      .get();
+
+    if (snap.empty) {
+      el.innerHTML = '<div class="empty">Aún no hay recetas para calcular estadísticas</div>';
+      return;
+    }
+
+    const recetas = snap.docs.map(d => d.data());
+    const total = recetas.length;
+
+    // Pacientes únicos
+    const pacientesUnicos = new Set(recetas.map(r => r.paciente).filter(Boolean)).size;
+
+    // Top medicamentos
+    const medCount = {};
+    recetas.forEach(r => {
+      if (!r.medicamentos) return;
+      r.medicamentos.split(',').forEach(m => {
+        const nombre = m.trim().split(' ').slice(0, 2).join(' ');
+        if (nombre) medCount[nombre] = (medCount[nombre] || 0) + 1;
+      });
+    });
+    const topMeds = Object.entries(medCount)
+      .sort((a,b) => b[1]-a[1]).slice(0,5);
+
+    // Top diagnósticos
+    const dxCount = {};
+    recetas.forEach(r => {
+      if (!r.dx) return;
+      const dx = r.dx.trim();
+      if (dx) dxCount[dx] = (dxCount[dx] || 0) + 1;
+    });
+    const topDx = Object.entries(dxCount)
+      .sort((a,b) => b[1]-a[1]).slice(0,5);
+
+    const maxMed = topMeds[0]?.[1] || 1;
+    const maxDx  = topDx[0]?.[1]  || 1;
+
+    const barMeds = topMeds.map(([n,c]) => `
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:3px">
+          <span>${n}</span><strong>${c}</strong>
+        </div>
+        <div style="background:var(--border);border-radius:4px;height:8px;">
+          <div style="background:var(--navy);height:8px;border-radius:4px;width:${Math.round(c/maxMed*100)}%;transition:width .4s"></div>
+        </div>
+      </div>`).join('');
+
+    const barDx = topDx.map(([n,c]) => `
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:3px">
+          <span>${escHtml(n)}</span><strong>${c}</strong>
+        </div>
+        <div style="background:var(--border);border-radius:4px;height:8px;">
+          <div style="background:var(--green);height:8px;border-radius:4px;width:${Math.round(c/maxDx*100)}%;transition:width .4s"></div>
+        </div>
+      </div>`).join('');
+
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="background:var(--navy);color:white;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:1.8rem;font-weight:700">${total}</div>
+          <div style="font-size:.75rem;opacity:.8">Recetas generadas</div>
+        </div>
+        <div style="background:var(--green);color:white;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:1.8rem;font-weight:700">${pacientesUnicos}</div>
+          <div style="font-size:.75rem;opacity:.8">Pacientes distintos</div>
+        </div>
+      </div>
+      ${topMeds.length ? `
+      <div style="margin-bottom:16px">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">💊 Medicamentos más recetados</div>
+        ${barMeds}
+      </div>` : ''}
+      ${topDx.length ? `
+      <div>
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">🩺 Diagnósticos más frecuentes</div>
+        ${barDx}
+      </div>` : ''}
+    `;
+
+  } catch(e) {
+    el.innerHTML = `<div class="empty" style="color:#b33">Error: ${e.message}</div>`;
+  }
 }
 
 async function verRecetaHistorial(id) {
