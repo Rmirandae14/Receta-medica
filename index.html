@@ -1367,25 +1367,10 @@ function mostrarAvisoControlado(nombre, info) {
   const existing = document.getElementById('aviso-controlado');
   if (existing) existing.remove();
 
-  const esGrupoII = info.grupo === 'II';
-  const color     = esGrupoII ? '#EAF3DE' : '#FAEEDA';
-  const borde     = esGrupoII ? '#639922' : '#EF9F27';
-  const textoDark = esGrupoII ? '#173404' : '#412402';
-  const textoMid  = esGrupoII ? '#3B6D11' : '#633806';
-  const icono     = esGrupoII ? 'ℹ️' : '⚠️';
-  const mensaje   = esGrupoII
-    ? `${nombre} es un ${info.tipo} (Grupo ${info.grupo}). En la mayoría de farmacias se dispensa con receta ordinaria, aunque algunas pueden solicitar receta especial.`
-    : `${nombre} es un ${info.tipo} (Grupo ${info.grupo}) y requiere <strong>receta especial con folio oficial de la SSA</strong> para ser dispensado en farmacia.`;
-
   const aviso = document.createElement('div');
   aviso.id = 'aviso-controlado';
-  aviso.style.cssText = `background:${color};border:1px solid ${borde};border-radius:10px;padding:12px 14px;margin-top:10px;font-size:.84rem;`;
-  aviso.innerHTML = `
-    <div style="display:flex;gap:8px;align-items:flex-start">
-      <span style="font-size:1rem;flex-shrink:0">${icono}</span>
-      <p style="color:${textoMid};margin:0;line-height:1.4">${mensaje}</p>
-    </div>
-  `;
+  aviso.style.cssText = 'background:#FAEEDA;border:1px solid #EF9F27;border-radius:8px;padding:8px 12px;margin-top:8px;font-size:.82rem;color:#633806;display:flex;gap:6px;align-items:center;';
+  aviso.innerHTML = `⚠️ <span><strong>Medicamento controlado</strong> — ${nombre} es un ${info.tipo} (Grupo ${info.grupo}).</span>`;
   document.getElementById('btn-add').after(aviso);
 }
 
