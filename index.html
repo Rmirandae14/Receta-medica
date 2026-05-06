@@ -1745,34 +1745,24 @@ function guardarManual() {
 }
 
 function imprimirReceta() {
-  const contenido = document.getElementById('receta-out').innerHTML;
-  const estilos = Array.from(document.querySelectorAll('style'))
-    .map(s => s.innerHTML).join('\n');
+  // Ocultar todo excepto la receta
+  const recetaOut = document.getElementById('receta-out');
+  const original = document.body.innerHTML;
 
-  const html = `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-${estilos}
-body { margin:0; padding:0; background:white; font-family:'Source Sans 3',sans-serif; }
-.receta { padding:14px 20px; }
-@page { margin:1cm; size:A4; }
-@media print { * { visibility:visible !important; } body { margin:0; padding:0; } }
-</style>
-</head>
-<body>
-<div class="receta">${contenido}</div>
-<script>window.onload=function(){setTimeout(function(){window.print();},600);};<\/script>
-</body>
-</html>`;
+  // Clonar solo el contenido de la receta
+  const solo = recetaOut.cloneNode(true);
+  document.body.innerHTML = '';
+  document.body.style.cssText = 'margin:0;padding:0;background:white;';
+  document.body.appendChild(solo);
 
-  const blob = new Blob([html], { type: 'text/html' });
-  const url  = URL.createObjectURL(blob);
-  window.open(url, '_blank');
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  window.print();
+
+  // Restaurar
+  document.body.innerHTML = original;
+  document.body.style.cssText = '';
+
+  // Reiniciar eventos
+  location.reload();
 }
 
 // Datos del médico por defecto
