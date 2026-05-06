@@ -1745,9 +1745,45 @@ function guardarManual() {
 }
 
 function imprimirReceta() {
-  document.body.classList.add('printing');
-  window.print();
-  setTimeout(() => document.body.classList.remove('printing'), 500);
+  const contenido = document.getElementById('receta-out').innerHTML;
+  const estilos = Array.from(document.querySelectorAll('style'))
+    .map(s => s.innerHTML).join('\n');
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:210mm;height:auto;border:none;';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open();
+  doc.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+      <style>
+        ${estilos}
+        @media print {
+          * { visibility: visible !important; }
+          body { margin:0; padding:0; background:white; }
+        }
+        body { margin:0; padding:0; background:white; font-family:'Source Sans 3',sans-serif; }
+        .receta { padding: 14px 20px; font-family:'Source Sans 3',sans-serif; }
+        @page { margin:1cm; size:A4; }
+      </style>
+    </head>
+    <body>
+      <div class="receta">${contenido}</div>
+    </body>
+    </html>
+  `);
+  doc.close();
+
+  iframe.onload = () => {
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    setTimeout(() => document.body.removeChild(iframe), 1000);
+  };
 }
 
 // Datos del médico por defecto
