@@ -481,6 +481,14 @@ body:has(#overlay.show) .dropdown { display: none !important; }
   <div class="sec">
     <div class="sec-head"><span class="ico">🧑‍💼</span><h2>Datos del Paciente</h2></div>
     <div class="sec-body">
+
+      <!-- Buscador de pacientes frecuentes -->
+      <div class="field" style="position:relative;margin-bottom:13px">
+        <label>Buscar paciente guardado</label>
+        <input id="pac-buscar" type="text" placeholder="Escribe el nombre para buscar..." autocomplete="off" oninput="buscarPaciente(this.value)" />
+        <div id="pac-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:0 0 8px 8px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.1);max-height:200px;overflow-y:auto;"></div>
+      </div>
+
       <div class="g4">
         <div class="field"><label>Nombre completo</label><input id="pac-nombre" placeholder="Nombre del paciente" /></div>
         <div class="field"><label>Edad</label><input id="pac-edad" placeholder="Se calcula automático" readonly style="background:var(--cream2);color:var(--muted)" /></div>
@@ -489,6 +497,10 @@ body:has(#overlay.show) .dropdown { display: none !important; }
       </div>
       <div class="g2" style="margin-top:13px">
         <div class="field"><label>Diagnóstico / Motivo de consulta</label><input id="pac-dx" placeholder="Ej. Infección de vías urinarias, HTA, IRAS..." /></div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="guardarPaciente()" style="background:var(--green);color:white;border:none;border-radius:7px;padding:9px 16px;font-family:'Source Sans 3',sans-serif;font-size:.8rem;cursor:pointer;font-weight:600;">💾 Guardar paciente</button>
+        <button onclick="limpiarPaciente()" style="background:none;color:var(--muted);border:1.5px solid var(--border);border-radius:7px;padding:9px 16px;font-family:'Source Sans 3',sans-serif;font-size:.8rem;cursor:pointer;">🗑 Limpiar</button>
       </div>
     </div>
   </div>
@@ -1315,6 +1327,101 @@ function agregarMed() {
   inp.value=''; document.getElementById('med-ind').value='';
   resetMedState();
 }
+
+/* ══════════════════════════════════════════
+   PACIENTES FRECUENTES
+══════════════════════════════════════════ */
+async function guardarPaciente() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const nombre = document.getElementById('pac-nombre').value.trim();
+  const fnac   = document.getElementById('pac-fnac').value.trim();
+  const edad   = document.getElementById('pac-edad').value.trim();
+
+  if (!nombre) { mostrarToast('⚠️ Escribe el nombre del paciente primero'); return; }
+
+  const db = firebase.firestore();
+  // Verificar si ya existe
+  const snap = await db.collection('pacientes')
+    .where('uid', '==', user.uid)
+    .where('nombre', '==', nombre)
+    .get();
+
+  if (!snap.empty) {
+    // Actualizar
+    await snap.docs[0].ref.update({ nombre, fnac, edad, actualizadoEn: firebase.firestore.FieldValue.serverTimestamp() });
+    mostrarToast(`✅ Paciente "${nombre}" actualizado`);
+  } else {
+    // Crear nuevo
+    await db.collection('pacientes').add({
+      uid: user.uid,
+      nombre, fnac, edad,
+      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    mostrarToast(`✅ Paciente "${nombre}" guardado`);
+  }
+}
+
+async function buscarPaciente(q) {
+  const dd = document.getElementById('pac-dropdown');
+  if (q.length < 2) { dd.style.display = 'none'; return; }
+
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const db = firebase.firestore();
+  const snap = await db.collection('pacientes')
+    .where('uid', '==', user.uid)
+    .orderBy('nombre')
+    .startAt(q)
+    .endAt(q + '\uf8ff')
+    .limit(6)
+    .get();
+
+  if (snap.empty) { dd.style.display = 'none'; return; }
+
+  dd.innerHTML = snap.docs.map(doc => {
+    const d = doc.data();
+    return `<div onclick="cargarPaciente('${doc.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.88rem;" onmouseover="this.style.background='var(--cream2)'" onmouseout="this.style.background='white'">
+      👤 <strong>${d.nombre}</strong> ${d.fnac ? `· ${d.fnac}` : ''} ${d.edad ? `· ${d.edad}` : ''}
+    </div>`;
+  }).join('');
+  dd.style.display = 'block';
+}
+
+async function cargarPaciente(id) {
+  const db = firebase.firestore();
+  const doc = await db.collection('pacientes').doc(id).get();
+  if (!doc.exists) return;
+  const d = doc.data();
+
+  document.getElementById('pac-nombre').value = d.nombre || '';
+  document.getElementById('pac-fnac').value   = d.fnac   || '';
+  document.getElementById('pac-edad').value   = d.edad   || '';
+  document.getElementById('pac-buscar').value = '';
+  document.getElementById('pac-dropdown').style.display = 'none';
+  document.getElementById('pac-fecha').value  = new Date().toISOString().split('T')[0];
+
+  mostrarToast(`✅ Paciente "${d.nombre}" cargado`);
+}
+
+function limpiarPaciente() {
+  ['pac-nombre','pac-edad','pac-fnac','pac-dx','pac-buscar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('pac-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('pac-dropdown').style.display = 'none';
+}
+
+// Cerrar dropdown pacientes al tocar fuera
+document.addEventListener('click', e => {
+  if (!e.target.closest('#pac-buscar') && !e.target.closest('#pac-dropdown')) {
+    const dd = document.getElementById('pac-dropdown');
+    if (dd) dd.style.display = 'none';
+  }
+});
 
 function mostrarToast(msg) {
   const t = document.getElementById('toast');
