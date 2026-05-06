@@ -581,6 +581,9 @@ body:has(#overlay.show) .dropdown { display: none !important; }
       <button onclick="cargarHistorial()" style="margin-left:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;border-radius:6px;padding:5px 12px;font-size:.78rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">🔄 Actualizar</button>
     </div>
     <div class="sec-body" style="padding:0">
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+        <input id="historial-buscar" type="text" placeholder="🔍 Buscar por paciente, diagnóstico o medicamento..." oninput="filtrarHistorial(this.value)" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Source Sans 3',sans-serif;font-size:.88rem;box-sizing:border-box;" />
+      </div>
       <div id="historial-list" style="padding:14px">
         <div class="empty">Toca "Actualizar" para ver tus recetas anteriores</div>
       </div>
@@ -1463,6 +1466,8 @@ function quitarMed(i) { lista.splice(i,1); renderLista(); }
 /* ══════════════════════════════════════════
    HISTORIAL DE RECETAS
 ══════════════════════════════════════════ */
+let todasLasRecetas = [];
+
 async function cargarHistorial() {
   const el = document.getElementById('historial-list');
   el.innerHTML = '<div class="empty">Cargando...</div>';
@@ -1475,44 +1480,62 @@ async function cargarHistorial() {
     const snap = await db.collection('recetas')
       .where('uid', '==', user.uid)
       .orderBy('creadoEn', 'desc')
-      .limit(30)
+      .limit(50)
       .get();
 
     if (snap.empty) {
+      todasLasRecetas = [];
       el.innerHTML = '<div class="empty">Aún no hay recetas guardadas</div>';
       return;
     }
 
-    const fmtFecha = s => {
-      if (!s) return '—';
-      const d = new Date(s + 'T12:00:00');
-      return d.toLocaleDateString('es-MX', { day:'2-digit', month:'2-digit', year:'numeric' });
-    };
-
-    el.innerHTML = snap.docs.map(doc => {
-      const d = doc.data();
-      const id = doc.id;
-      return `
-        <div class="h-item">
-          <div class="h-item-top">
-            <span class="h-num">${d.numRx || 'Sin número'}</span>
-            <span class="h-fecha">${fmtFecha(d.fecha)}</span>
-          </div>
-          <div class="h-pac">👤 ${d.paciente || '—'} · ${d.edad || '—'}</div>
-          ${d.dx ? `<div class="h-dx">🩺 ${escHtml(d.dx)}</div>` : ''}
-          <div class="h-meds">💊 ${escHtml(d.medicamentos || '—')}</div>
-          <div style="display:flex;gap:8px;margin-top:6px">
-            <button onclick="verRecetaHistorial('${id}')" style="flex:1;background:var(--navy);color:white;border:none;border-radius:6px;padding:6px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">👁 Ver receta</button>
-            <button onclick="usarDiagnostico('${id}')" style="flex:1;background:var(--green);color:white;border:none;border-radius:6px;padding:6px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">📋 Usar diagnóstico</button>
-            <button onclick="eliminarReceta('${id}')" style="background:#fde;color:#b33;border:1px solid #f5c6c6;border-radius:6px;padding:6px 10px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">🗑</button>
-          </div>
-        </div>
-      `;
-    }).join('');
+    todasLasRecetas = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderHistorial(todasLasRecetas);
 
   } catch(e) {
     el.innerHTML = `<div class="empty" style="color:#b33">Error al cargar: ${e.message}</div>`;
   }
+}
+
+function filtrarHistorial(q) {
+  if (!q.trim()) { renderHistorial(todasLasRecetas); return; }
+  const ql = q.toLowerCase();
+  const filtradas = todasLasRecetas.filter(d =>
+    (d.paciente || '').toLowerCase().includes(ql) ||
+    (d.dx || '').toLowerCase().includes(ql) ||
+    (d.medicamentos || '').toLowerCase().includes(ql)
+  );
+  if (!filtradas.length) {
+    document.getElementById('historial-list').innerHTML = '<div class="empty">No se encontraron recetas</div>';
+  } else {
+    renderHistorial(filtradas);
+  }
+}
+
+function renderHistorial(recetas) {
+  const el = document.getElementById('historial-list');
+  const fmtFecha = s => {
+    if (!s) return '—';
+    const d = new Date(s + 'T12:00:00');
+    return d.toLocaleDateString('es-MX', { day:'2-digit', month:'2-digit', year:'numeric' });
+  };
+
+  el.innerHTML = recetas.map(d => `
+    <div class="h-item">
+      <div class="h-item-top">
+        <span class="h-num">${d.numRx || 'Sin número'}</span>
+        <span class="h-fecha">${fmtFecha(d.fecha)}</span>
+      </div>
+      <div class="h-pac">👤 ${d.paciente || '—'} · ${d.edad || '—'}</div>
+      ${d.dx ? `<div class="h-dx">🩺 ${escHtml(d.dx)}</div>` : ''}
+      <div class="h-meds">💊 ${escHtml(d.medicamentos || '—')}</div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button onclick="verRecetaHistorial('${d.id}')" style="flex:1;background:var(--navy);color:white;border:none;border-radius:6px;padding:6px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">👁 Ver receta</button>
+        <button onclick="usarDiagnostico('${d.id}')" style="flex:1;background:var(--green);color:white;border:none;border-radius:6px;padding:6px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">📋 Usar diagnóstico</button>
+        <button onclick="eliminarReceta('${d.id}')" style="background:#fde;color:#b33;border:1px solid #f5c6c6;border-radius:6px;padding:6px 10px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">🗑</button>
+      </div>
+    </div>
+  `).join('');
 }
 
 async function verRecetaHistorial(id) {
@@ -1625,7 +1648,10 @@ async function eliminarReceta(id) {
   const db = firebase.firestore();
   try {
     await db.collection('recetas').doc(id).delete();
-    cargarHistorial();
+    todasLasRecetas = todasLasRecetas.filter(r => r.id !== id);
+    const q = document.getElementById('historial-buscar')?.value || '';
+    filtrarHistorial(q);
+    mostrarToast('🗑 Receta eliminada');
   } catch(e) {
     alert('Error al eliminar: ' + e.message);
   }
