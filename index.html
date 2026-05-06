@@ -1959,10 +1959,7 @@ function verReceta() {
 
     <div class="r-meds-wrap">
       ${medsHtml}
-      ${lista.some(m => m.controlado && m.grupoControlado !== 'II') ? `
-      <div style="background:#fff8e8;border:1px solid #EF9F27;border-radius:6px;padding:8px 12px;margin-top:10px;font-size:.72rem;color:#633806;">
-        ⚠️ Esta receta contiene medicamentos que requieren receta especial con folio oficial de la SSA para ser dispensados.
-      </div>` : ''}
+      ${lista.some(m => m.controlado && m.grupoControlado !== 'II') ? `` : ''}
       ${notas ? `<div class="r-notas"><strong>Indicaciones generales</strong>${escHtml(notas)}</div>` : ''}
       <div class="r-footer">
         <div>
