@@ -1332,13 +1332,75 @@ function resetMedState() {
 /* ══════════════════════════════════════════
    LISTA
 ══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   MEDICAMENTOS CONTROLADOS
+══════════════════════════════════════════ */
+const CONTROLADOS = {
+  // Grupo I — Estupefacientes
+  'Morfina':{'grupo':'I','tipo':'Estupefaciente'},'Codeína':{'grupo':'I','tipo':'Estupefaciente'},
+  'Fentanilo':{'grupo':'I','tipo':'Estupefaciente'},'Oxicodona':{'grupo':'I','tipo':'Estupefaciente'},
+  'Hidromorfona':{'grupo':'I','tipo':'Estupefaciente'},'Metadona':{'grupo':'I','tipo':'Estupefaciente'},
+  'Buprenorfina':{'grupo':'I','tipo':'Estupefaciente'},'Tapentadol':{'grupo':'I','tipo':'Estupefaciente'},
+  // Grupo II — Psicotrópicos fuerte control
+  'Tramadol':{'grupo':'II','tipo':'Opioide débil'},'Metilfenidato':{'grupo':'II','tipo':'Estimulante'},
+  'Ritalin':{'grupo':'II','tipo':'Estimulante'},'Concerta':{'grupo':'II','tipo':'Estimulante'},
+  'Anfetamina':{'grupo':'II','tipo':'Estimulante'},'Modafinilo':{'grupo':'II','tipo':'Estimulante'},
+  // Grupo III — Psicotrópicos control moderado
+  'Clonazepam':{'grupo':'III','tipo':'Benzodiacepina'},'Rivotril':{'grupo':'III','tipo':'Benzodiacepina'},
+  'Alprazolam':{'grupo':'III','tipo':'Benzodiacepina'},'Xanax':{'grupo':'III','tipo':'Benzodiacepina'},
+  'Diazepam':{'grupo':'III','tipo':'Benzodiacepina'},'Valium':{'grupo':'III','tipo':'Benzodiacepina'},
+  'Lorazepam':{'grupo':'III','tipo':'Benzodiacepina'},'Ativan':{'grupo':'III','tipo':'Benzodiacepina'},
+  'Midazolam':{'grupo':'III','tipo':'Benzodiacepina'},'Zolpidem':{'grupo':'III','tipo':'Hipnótico'},
+  'Ambien':{'grupo':'III','tipo':'Hipnótico'},'Fenobarbital':{'grupo':'III','tipo':'Barbitúrico'},
+  'Pregabalina':{'grupo':'III','tipo':'Antiepiléptico'},'Lyrica':{'grupo':'III','tipo':'Antiepiléptico'},
+  'Gabapentina':{'grupo':'III','tipo':'Antiepiléptico'},'Neurontin':{'grupo':'III','tipo':'Antiepiléptico'},
+  'Butalbital':{'grupo':'III','tipo':'Barbitúrico'},'Carisoprodol':{'grupo':'III','tipo':'Relajante muscular'},
+  'Ketamina':{'grupo':'III','tipo':'Anestésico'},'Tramal':{'grupo':'II','tipo':'Opioide débil'},
+  'Tramol':{'grupo':'II','tipo':'Opioide débil'},'Zaldiar':{'grupo':'II','tipo':'Opioide débil'},
+};
+
+function esControlado(nombre) {
+  return CONTROLADOS[nombre] || null;
+}
+
+function mostrarAvisoControlado(nombre, info) {
+  const existing = document.getElementById('aviso-controlado');
+  if (existing) existing.remove();
+
+  const esGrupoII = info.grupo === 'II';
+  const color     = esGrupoII ? '#EAF3DE' : '#FAEEDA';
+  const borde     = esGrupoII ? '#639922' : '#EF9F27';
+  const textoDark = esGrupoII ? '#173404' : '#412402';
+  const textoMid  = esGrupoII ? '#3B6D11' : '#633806';
+  const icono     = esGrupoII ? 'ℹ️' : '⚠️';
+  const mensaje   = esGrupoII
+    ? `${nombre} es un ${info.tipo} (Grupo ${info.grupo}). En la mayoría de farmacias se dispensa con receta ordinaria, aunque algunas pueden solicitar receta especial.`
+    : `${nombre} es un ${info.tipo} (Grupo ${info.grupo}) y requiere <strong>receta especial con folio oficial de la SSA</strong> para ser dispensado en farmacia.`;
+
+  const aviso = document.createElement('div');
+  aviso.id = 'aviso-controlado';
+  aviso.style.cssText = `background:${color};border:1px solid ${borde};border-radius:10px;padding:12px 14px;margin-top:10px;font-size:.84rem;`;
+  aviso.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:flex-start">
+      <span style="font-size:1rem;flex-shrink:0">${icono}</span>
+      <p style="color:${textoMid};margin:0;line-height:1.4">${mensaje}</p>
+    </div>
+  `;
+  document.getElementById('btn-add').after(aviso);
+}
+
 function agregarMed() {
   if (!medActual || !dosisActual) return;
   const forma = document.getElementById('med-forma').value;
   const freq  = document.getElementById('med-freq').value;
   const dur   = document.getElementById('med-dur').value;
   const ind   = document.getElementById('med-ind').value.trim();
-  lista.push({ nombre:medActual, dosis:dosisActual, forma, freq, dur, ind });
+
+  // Verificar si es controlado
+  const ctrl = esControlado(medActual);
+  if (ctrl) mostrarAvisoControlado(medActual, ctrl);
+
+  lista.push({ nombre:medActual, dosis:dosisActual, forma, freq, dur, ind, controlado: !!ctrl, grupoControlado: ctrl?.grupo || null });
   renderLista();
   // reset
   inp.value=''; document.getElementById('med-ind').value='';
@@ -1455,7 +1517,7 @@ function renderLista() {
     <div class="med-item">
       <div class="med-num">${i+1}</div>
       <div class="med-info">
-        <div class="med-name">${m.nombre} ${m.dosis} ${m.forma}</div>
+        <div class="med-name">${m.nombre} ${m.dosis} ${m.forma}${m.controlado ? ` <span style="background:#FAEEDA;color:#633806;font-size:.62rem;padding:2px 6px;border-radius:4px;border:0.5px solid #EF9F27;font-weight:600">⚠️ Grupo ${m.grupoControlado}</span>` : ''}</div>
         <div class="med-detail">
           ${m.freq} · Durante ${m.dur}
           ${m.ind ? `<br>${m.ind}` : ''}
@@ -1897,6 +1959,10 @@ function verReceta() {
 
     <div class="r-meds-wrap">
       ${medsHtml}
+      ${lista.some(m => m.controlado && m.grupoControlado !== 'II') ? `
+      <div style="background:#fff8e8;border:1px solid #EF9F27;border-radius:6px;padding:8px 12px;margin-top:10px;font-size:.72rem;color:#633806;">
+        ⚠️ Esta receta contiene medicamentos que requieren receta especial con folio oficial de la SSA para ser dispensados.
+      </div>` : ''}
       ${notas ? `<div class="r-notas"><strong>Indicaciones generales</strong>${escHtml(notas)}</div>` : ''}
       <div class="r-footer">
         <div>
