@@ -320,8 +320,8 @@ body:has(#overlay.show) .dropdown { display: none !important; }
 .r-notas { margin-top:12px; padding-top:10px; border-top:1px solid var(--border); font-size:.82rem; }
 .r-notas strong { font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); display:block; margin-bottom:4px; }
 .r-footer { margin-top:24px; border-top:2px solid var(--navy); padding-top:14px; display:flex; justify-content:space-between; align-items:flex-end; font-size:.72rem; }
-.r-firma { text-align:center; }
-.r-firma-line { border-top:1px solid var(--text); width:180px; margin:0 auto 4px; }
+.r-firma { display:flex; align-items:center; justify-content:flex-end; gap:16px; }
+.r-firma-line { border-top:1px solid var(--text); width:180px; margin-bottom:4px; }
 .r-footer-addr { color:var(--muted); font-size:.65rem; max-width:320px; }
 
 @media print {
@@ -1554,12 +1554,16 @@ function verReceta() {
           <div class="r-footer-addr">${instDir}</div>
         </div>
         <div class="r-firma">
-          ${window.firmaDataURL ? `<img src="${window.firmaDataURL}" style="height:55px;max-width:180px;object-fit:contain;display:block;margin:0 auto -8px;" />` : ''}
-          <div class="r-firma-line"></div>
-          <strong>${docN}</strong><br>
-          ${docEsp ? docEsp+'<br>' : ''}
-          P. Ced. Prof: ${docCed}<br>
-          ${docUni}
+          ${window.firmaDataURL ? `
+            <img src="${window.firmaDataURL}" style="height:60px;max-width:140px;object-fit:contain;display:block;flex-shrink:0;" />
+          ` : `<div style="width:140px;flex-shrink:0;"></div>`}
+          <div>
+            <div class="r-firma-line"></div>
+            <strong>${docN}</strong><br>
+            ${docEsp ? docEsp+'<br>' : ''}
+            P. Ced. Prof: ${docCed}<br>
+            ${docUni}
+          </div>
         </div>
       </div>
     </div>
