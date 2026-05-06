@@ -1359,6 +1359,7 @@ async function cargarHistorial() {
 
     el.innerHTML = snap.docs.map(doc => {
       const d = doc.data();
+      const id = doc.id;
       return `
         <div class="h-item">
           <div class="h-item-top">
@@ -1368,12 +1369,54 @@ async function cargarHistorial() {
           <div class="h-pac">👤 ${d.paciente || '—'} · ${d.edad || '—'}</div>
           ${d.dx ? `<div class="h-dx">🩺 ${escHtml(d.dx)}</div>` : ''}
           <div class="h-meds">💊 ${escHtml(d.medicamentos || '—')}</div>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button onclick="cargarRecetaHistorial('${id}')" style="flex:1;background:var(--navy);color:white;border:none;border-radius:6px;padding:6px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">📋 Cargar en formulario</button>
+            <button onclick="eliminarReceta('${id}')" style="background:#fde;color:#b33;border:1px solid #f5c6c6;border-radius:6px;padding:6px 10px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">🗑</button>
+          </div>
         </div>
       `;
     }).join('');
 
   } catch(e) {
     el.innerHTML = `<div class="empty" style="color:#b33">Error al cargar: ${e.message}</div>`;
+  }
+}
+
+async function cargarRecetaHistorial(id) {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  const db = firebase.firestore();
+  const doc = await db.collection('recetas').doc(id).get();
+  if (!doc.exists) { alert('Receta no encontrada.'); return; }
+  const d = doc.data();
+
+  // Cargar datos del paciente
+  document.getElementById('pac-nombre').value = d.paciente || '';
+  document.getElementById('pac-edad').value   = d.edad || '';
+  document.getElementById('pac-fnac').value   = d.fnac || '';
+  document.getElementById('pac-dx').value     = d.dx || '';
+  document.getElementById('pac-fecha').value  = d.fecha || new Date().toISOString().split('T')[0];
+  document.getElementById('notas').value      = d.notas || '';
+  document.getElementById('num-receta').value = d.numRx || '';
+
+  // Limpiar lista de medicamentos (no se pueden restaurar objetos completos desde el string guardado)
+  lista = [];
+  renderLista();
+
+  alert(`✅ Datos de ${d.paciente || 'paciente'} cargados.\n\nNota: los medicamentos deben agregarse nuevamente ya que solo se guarda el resumen en el historial.`);
+
+  // Scroll al inicio
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function eliminarReceta(id) {
+  if (!confirm('¿Eliminar esta receta del historial? Esta acción no se puede deshacer.')) return;
+  const db = firebase.firestore();
+  try {
+    await db.collection('recetas').doc(id).delete();
+    cargarHistorial();
+  } catch(e) {
+    alert('Error al eliminar: ' + e.message);
   }
 }
 
@@ -1523,23 +1566,33 @@ function verReceta() {
 
   document.getElementById('overlay').classList.add('show');
 
-  // ── Guardar receta en Firestore automáticamente ──
+  // ── Guardar receta en Firestore solo si el número es nuevo ──
   const user = firebase.auth().currentUser;
-  if (user && typeof firebase !== 'undefined') {
+  if (user && typeof firebase !== 'undefined' && numRx) {
     const db = firebase.firestore();
-    db.collection('recetas').add({
-      uid: user.uid,
-      email: user.email,
-      numRx,
-      paciente: pacN,
-      edad: pacE,
-      fnac: pacFN,
-      dx: dx || '',
-      fecha: fechaV,
-      medicamentos: lista.map(m => `${m.nombre} ${m.dosis} ${m.forma}`).join(', '),
-      notas: notas || '',
-      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(() => {}); // silencioso si falla
+    db.collection('recetas')
+      .where('uid', '==', user.uid)
+      .where('numRx', '==', numRx)
+      .get()
+      .then(snap => {
+        if (snap.empty) {
+          // Número nuevo — guardar
+          db.collection('recetas').add({
+            uid: user.uid,
+            email: user.email,
+            numRx,
+            paciente: pacN,
+            edad: pacE,
+            fnac: pacFN,
+            dx: dx || '',
+            fecha: fechaV,
+            medicamentos: lista.map(m => `${m.nombre} ${m.dosis} ${m.forma}`).join(', '),
+            notas: notas || '',
+            creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+          }).catch(() => {});
+        }
+        // Si ya existe el número — no hace nada
+      }).catch(() => {});
   }
 }
 
