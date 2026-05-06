@@ -2298,6 +2298,8 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
+const ADMIN_EMAIL = 'rmirandae14@gmail.com';
+
 (function() {
   firebase.initializeApp({
     apiKey: "AIzaSyCziKdP5V_DxvL-VD3I2Hm9rgJygf9j0kc",
@@ -2321,8 +2323,6 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('app-root').style.display = 'none';
   }
-
-  const ADMIN_EMAIL = 'rmirandae14@gmail.com';
 
   async function ocultarLogin(user) {
     document.getElementById('login-screen').style.display = 'none';
