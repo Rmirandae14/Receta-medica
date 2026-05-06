@@ -441,10 +441,12 @@ body:has(#overlay.show) .dropdown { display: none !important; }
 
 <header class="topbar">
   <div class="topbar-logo">⚕️</div>
-  <h1>Sistema de Receta Médica</h1>
-  <small>CESS — Universidad Veracruzana</small>
-  <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0">
-    <span id="user-badge" style="font-size:.72rem;color:rgba(255,255,255,.7);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+  <div style="display:flex;flex-direction:column;gap:1px;min-width:0">
+    <h1 style="font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Receta Médica</h1>
+    <small>CESS — UV</small>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0">
+    <span id="user-badge" style="font-size:.65rem;color:rgba(255,255,255,.7);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none;" class="hide-mobile"></span>
     <button id="btn-admin" onclick="abrirAdmin()" style="display:none;background:var(--gold);color:var(--navy2);border:none;border-radius:6px;padding:5px 10px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;font-weight:700;">⚙️ Admin</button>
     <button onclick="cerrarSesion()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;border-radius:6px;padding:5px 10px;font-size:.75rem;cursor:pointer;font-family:'Source Sans 3',sans-serif;">Salir</button>
   </div>
