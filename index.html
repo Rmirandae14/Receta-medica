@@ -2350,13 +2350,23 @@ const ADMIN_EMAIL = 'rmirandae14@gmail.com';
     const badge = document.getElementById('user-badge');
     if (badge) badge.textContent = user.email;
 
+    // Generar número de receta inmediatamente
+    const el = document.getElementById('num-receta');
+    if (el && !el.value) {
+      const fecha = new Date();
+      const yy  = String(fecha.getFullYear()).slice(2);
+      const mm  = String(fecha.getMonth()+1).padStart(2,'0');
+      const dd  = String(fecha.getDate()).padStart(2,'0');
+      const rand = String(Math.floor(Math.random()*9000)+1000);
+      el.value = `RX-${yy}${mm}${dd}-${rand}`;
+    }
+
     // Mostrar botón admin si es administrador
     if (user.email === ADMIN_EMAIL) {
       document.getElementById('btn-admin').style.display = 'block';
     }
 
     await cargarPerfilMedico(user);
-    setTimeout(() => generarNumReceta(), 300);
   }
 
   // ── Cargar perfil del médico desde Firestore ──
