@@ -1431,93 +1431,6 @@ function agregarMed() {
 /* ══════════════════════════════════════════
    PANEL ADMINISTRADOR
 ══════════════════════════════════════════ */
-window.abrirAdmin = async function() {
-  document.getElementById('modal-admin').style.display = 'flex';
-  await cargarMedicosAdmin();
-};
-
-window.cerrarAdmin = function() {
-  document.getElementById('modal-admin').style.display = 'none';
-};
-
-async function cargarMedicosAdmin() {
-  const lista = document.getElementById('admin-lista');
-  lista.innerHTML = '<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px;">Cargando...</div>';
-
-  const db = firebase.firestore();
-
-  try {
-    // Cargar correos autorizados
-    const authSnap = await db.collection('autorizados').get();
-    const autorizados = authSnap.docs.map(d => ({ id: d.id, email: d.data().email }));
-
-    // Cargar perfiles de médicos
-    const medsSnap = await db.collection('medicos').get();
-    const medicos  = {};
-    medsSnap.docs.forEach(d => { medicos[d.data().email] = d.data(); });
-
-    // Contar recetas por médico individualmente
-    const rxCount = {};
-    await Promise.all(autorizados.map(async a => {
-      const snap = await db.collection('recetas').where('email','==',a.email).get();
-      rxCount[a.email] = snap.size;
-    }));
-
-    if (!autorizados.length) {
-      lista.innerHTML = '<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px;">No hay correos autorizados</div>';
-      return;
-    }
-
-    lista.innerHTML = autorizados.map(a => {
-      const med = medicos[a.email];
-      const rx  = rxCount[a.email] || 0;
-      return `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:.88rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${med ? med.nombre : '— Sin perfil —'}</div>
-            <div style="font-size:.75rem;color:var(--muted);">${a.email}</div>
-            ${med ? `<div style="font-size:.72rem;color:var(--muted);">${med.esp || ''} · ${med.cedula || ''}</div>` : ''}
-          </div>
-          <div style="text-align:center;flex-shrink:0;">
-            <div style="font-size:1.1rem;font-weight:700;color:var(--navy);">${rx}</div>
-            <div style="font-size:.65rem;color:var(--muted);">recetas</div>
-          </div>
-          ${a.email !== ADMIN_EMAIL ? `
-          <button onclick="revocarAcceso('${a.id}','${a.email}')" style="background:#fde;color:#b33;border:1px solid #f5c6c6;border-radius:6px;padding:5px 8px;font-size:.72rem;cursor:pointer;flex-shrink:0;">🗑 Revocar</button>
-          ` : '<span style="font-size:.72rem;color:var(--gold);font-weight:700;">ADMIN</span>'}
-        </div>
-      `;
-    }).join('');
-
-  } catch(e) {
-    lista.innerHTML = `<div style="color:#b33;font-size:.85rem;padding:10px;">Error: ${e.message}</div>`;
-  }
-}
-
-window.agregarAutorizado = async function() {
-  const input = document.getElementById('admin-nuevo-correo');
-  const email = input.value.trim().toLowerCase();
-  if (!email || !email.includes('@')) { mostrarToast('⚠️ Ingresa un correo válido'); return; }
-
-  const db = firebase.firestore();
-  // Verificar si ya existe
-  const snap = await db.collection('autorizados').where('email','==',email).get();
-  if (!snap.empty) { mostrarToast('⚠️ Ese correo ya está autorizado'); return; }
-
-  await db.collection('autorizados').add({ email });
-  input.value = '';
-  mostrarToast(`✅ ${email} agregado`);
-  await cargarMedicosAdmin();
-};
-
-window.revocarAcceso = async function(id, email) {
-  if (!confirm(`¿Revocar acceso a ${email}? Ya no podrá entrar a la app.`)) return;
-  const db = firebase.firestore();
-  await db.collection('autorizados').doc(id).delete();
-  mostrarToast(`🗑 Acceso revocado: ${email}`);
-  await cargarMedicosAdmin();
-};
-
 /* ══════════════════════════════════════════
    PACIENTES FRECUENTES
 ══════════════════════════════════════════ */
@@ -2272,7 +2185,7 @@ document.getElementById('pac-fecha').value = new Date().toISOString().split('T')
 /* ══════════════════════════════════════════
    NÚMERO DE RECETA AUTOGENERADO
 ══════════════════════════════════════════ */
-function generarNumReceta() {
+window.generarNumReceta = function generarNumReceta() {
   const fecha = new Date();
   const yy  = String(fecha.getFullYear()).slice(2);
   const mm  = String(fecha.getMonth()+1).padStart(2,'0');
@@ -2302,15 +2215,8 @@ function calcularEdad(fnacStr) {
     : `${edad} años`;
 }
 
-document.getElementById('pac-fnac').addEventListener('input', function() {
-  const edad = calcularEdad(this.value);
-  document.getElementById('pac-edad').value = edad;
-});
-
 /* ══════════════════════════════════════════
    AUTO-FORMATO FECHA DE NACIMIENTO (DD/MM/AAAA)
-   El usuario escribe 25061996 y el campo va mostrando
-   25, 25/0, 25/06, 25/06/1, ..., 25/06/1996
 ══════════════════════════════════════════ */
 (function () {
   const fnac = document.getElementById('pac-fnac');
@@ -2320,15 +2226,16 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
   fnac.setAttribute('maxlength', '10');
 
   fnac.addEventListener('input', (e) => {
-    // Solo dígitos, máximo 8
     let v = e.target.value.replace(/\D/g, '').slice(0, 8);
     let out = v;
     if (v.length >= 5)      out = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
     else if (v.length >= 3) out = v.slice(0,2) + '/' + v.slice(2);
     e.target.value = out;
+    // Calcular edad al mismo tiempo
+    const edad = calcularEdad(out);
+    document.getElementById('pac-edad').value = edad;
   });
 
-  // Permitir borrar las "/" naturalmente con backspace
   fnac.addEventListener('keydown', (e) => {
     if (e.key === 'Backspace') {
       const pos = e.target.selectionStart;
@@ -2337,7 +2244,6 @@ document.getElementById('pac-fnac').addEventListener('input', function() {
         const v = e.target.value;
         e.target.value = v.slice(0, pos - 1) + v.slice(pos);
         e.target.setSelectionRange(pos - 1, pos - 1);
-        // Disparar input para reformatear
         e.target.dispatchEvent(new Event('input'));
       }
     }
@@ -2762,6 +2668,82 @@ const ADMIN_EMAIL = 'rmirandae14@gmail.com';
       await auth.signOut();
     }
   };
+
+  // ── Panel Admin ──
+  window.abrirAdmin = async function() {
+    document.getElementById('modal-admin').style.display = 'flex';
+    await cargarMedicosAdmin();
+  };
+
+  window.cerrarAdmin = function() {
+    document.getElementById('modal-admin').style.display = 'none';
+  };
+
+  async function cargarMedicosAdmin() {
+    const lista = document.getElementById('admin-lista');
+    lista.innerHTML = '<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px;">Cargando...</div>';
+    const db = firebase.firestore();
+    try {
+      const authSnap = await db.collection('autorizados').get();
+      const autorizados = authSnap.docs.map(d => ({ id: d.id, email: d.data().email }));
+      const medsSnap = await db.collection('medicos').get();
+      const medicos = {};
+      medsSnap.docs.forEach(d => { medicos[d.data().email] = d.data(); });
+      const rxCount = {};
+      await Promise.all(autorizados.map(async a => {
+        const snap = await db.collection('recetas').where('email','==',a.email).get();
+        rxCount[a.email] = snap.size;
+      }));
+      if (!autorizados.length) {
+        lista.innerHTML = '<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px;">No hay correos autorizados</div>';
+        return;
+      }
+      lista.innerHTML = autorizados.map(a => {
+        const med = medicos[a.email];
+        const rx  = rxCount[a.email] || 0;
+        return `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:.88rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${med ? med.nombre : '— Sin perfil —'}</div>
+              <div style="font-size:.75rem;color:var(--muted);">${a.email}</div>
+              ${med ? `<div style="font-size:.72rem;color:var(--muted);">${med.esp || ''} · ${med.cedula || ''}</div>` : ''}
+            </div>
+            <div style="text-align:center;flex-shrink:0;">
+              <div style="font-size:1.1rem;font-weight:700;color:var(--navy);">${rx}</div>
+              <div style="font-size:.65rem;color:var(--muted);">recetas</div>
+            </div>
+            ${a.email !== ADMIN_EMAIL ? `
+            <button onclick="revocarAcceso('${a.id}','${a.email}')" style="background:#fde;color:#b33;border:1px solid #f5c6c6;border-radius:6px;padding:5px 8px;font-size:.72rem;cursor:pointer;flex-shrink:0;">🗑 Revocar</button>
+            ` : '<span style="font-size:.72rem;color:var(--gold);font-weight:700;">ADMIN</span>'}
+          </div>
+        `;
+      }).join('');
+    } catch(e) {
+      lista.innerHTML = `<div style="color:#b33;font-size:.85rem;padding:10px;">Error: ${e.message}</div>`;
+    }
+  }
+
+  window.agregarAutorizado = async function() {
+    const input = document.getElementById('admin-nuevo-correo');
+    const email = input.value.trim().toLowerCase();
+    if (!email || !email.includes('@')) { mostrarToast('⚠️ Ingresa un correo válido'); return; }
+    const db = firebase.firestore();
+    const snap = await db.collection('autorizados').where('email','==',email).get();
+    if (!snap.empty) { mostrarToast('⚠️ Ese correo ya está autorizado'); return; }
+    await db.collection('autorizados').add({ email });
+    input.value = '';
+    mostrarToast(`✅ ${email} agregado`);
+    await cargarMedicosAdmin();
+  };
+
+  window.revocarAcceso = async function(id, email) {
+    if (!confirm(`¿Revocar acceso a ${email}?`)) return;
+    const db = firebase.firestore();
+    await db.collection('autorizados').doc(id).delete();
+    mostrarToast(`🗑 Acceso revocado: ${email}`);
+    await cargarMedicosAdmin();
+  };
+
 })();
 </script>
 
