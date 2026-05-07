@@ -2194,10 +2194,7 @@ window.generarNumReceta = function generarNumReceta() {
   const el = document.getElementById('num-receta');
   if (el) el.value = `RX-${yy}${mm}${dd}-${rand}`;
 }
-// Llamar cuando el DOM esté listo y también cuando Firebase autentique
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(generarNumReceta, 500);
-});
+// Llamar después de autenticación en ocultarLogin
 
 /* ══════════════════════════════════════════
    CÁLCULO AUTOMÁTICO DE EDAD
@@ -2359,7 +2356,7 @@ const ADMIN_EMAIL = 'rmirandae14@gmail.com';
     }
 
     await cargarPerfilMedico(user);
-    generarNumReceta();
+    setTimeout(() => generarNumReceta(), 300);
   }
 
   // ── Cargar perfil del médico desde Firestore ──
