@@ -6,6 +6,7 @@
 <title>Receta Médica Digital — CESS</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a3a6b">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="RecetaMédica">
@@ -506,11 +507,7 @@ body:has(#overlay.show) .dropdown { display: none !important; }
       <div id="antecedentes-wrap" style="margin-top:13px;display:none;">
         <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;">Antecedentes patológicos</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;" id="antecedentes-checks">
-          ${['Diabetes tipo 2','Hipertensión','Asma / EPOC','Cardiopatía','Insuficiencia renal','Hipotiroidismo','Obesidad','Epilepsia','Depresión / Ansiedad','Gastritis crónica','Artritis','VIH'].map(e =>
-            `<label style="display:flex;align-items:center;gap:6px;font-size:.84rem;cursor:pointer;">
-              <input type="checkbox" class="antecedente-check" value="${e}" style="width:15px;height:15px;accent-color:var(--navy);"> ${e}
-            </label>`
-          ).join('')}
+          <!-- Generado por JS -->
         </div>
         <div class="field">
           <label>Otras enfermedades</label>
@@ -1434,6 +1431,17 @@ function agregarMed() {
 /* ══════════════════════════════════════════
    PACIENTES FRECUENTES
 ══════════════════════════════════════════ */
+// Generar checkboxes de antecedentes
+const ANTECEDENTES_LIST = ['Diabetes tipo 2','Hipertensión','Asma / EPOC','Cardiopatía','Insuficiencia renal','Hipotiroidismo','Obesidad','Epilepsia','Depresión / Ansiedad','Gastritis crónica','Artritis','VIH'];
+const checksContainer = document.getElementById('antecedentes-checks');
+if (checksContainer) {
+  checksContainer.innerHTML = ANTECEDENTES_LIST.map(e =>
+    `<label style="display:flex;align-items:center;gap:6px;font-size:.84rem;cursor:pointer;">
+      <input type="checkbox" class="antecedente-check" value="${e}" style="width:15px;height:15px;accent-color:var(--navy);"> ${e}
+    </label>`
+  ).join('');
+}
+
 function toggleAntecedentes() {
   const wrap = document.getElementById('antecedentes-wrap');
   const btn  = document.getElementById('btn-antecedentes');
