@@ -501,10 +501,43 @@ body:has(#overlay.show) .dropdown { display: none !important; }
       <div class="g2" style="margin-top:13px">
         <div class="field"><label>Diagnóstico / Motivo de consulta</label><input id="pac-dx" placeholder="Ej. Infección de vías urinarias, HTA, IRAS..." /></div>
       </div>
+
+      <!-- ANTECEDENTES PATOLÓGICOS -->
+      <div id="antecedentes-wrap" style="margin-top:13px;display:none;">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;">Antecedentes patológicos</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;" id="antecedentes-checks">
+          ${['Diabetes tipo 2','Hipertensión','Asma / EPOC','Cardiopatía','Insuficiencia renal','Hipotiroidismo','Obesidad','Epilepsia','Depresión / Ansiedad','Gastritis crónica','Artritis','VIH'].map(e =>
+            `<label style="display:flex;align-items:center;gap:6px;font-size:.84rem;cursor:pointer;">
+              <input type="checkbox" class="antecedente-check" value="${e}" style="width:15px;height:15px;accent-color:var(--navy);"> ${e}
+            </label>`
+          ).join('')}
+        </div>
+        <div class="field">
+          <label>Otras enfermedades</label>
+          <input id="pac-otros-antecedentes" placeholder="Ej. Lupus, Psoriasis, Cirrosis..." />
+        </div>
+        <div class="field" style="margin-top:8px;">
+          <label>Alergias</label>
+          <input id="pac-alergias" placeholder="Ej. Penicilina, Sulfa, AINES..." />
+        </div>
+        <div class="field" style="margin-top:8px;">
+          <label>Medicamentos crónicos</label>
+          <input id="pac-meds-cronicos" placeholder="Ej. Metformina 500mg, Losartán 50mg..." />
+        </div>
+        <div class="field" style="margin-top:8px;">
+          <label>Notas del médico</label>
+          <input id="pac-notas-medico" placeholder="Observaciones importantes del paciente..." />
+        </div>
+      </div>
+
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="guardarPaciente()" style="background:var(--green);color:white;border:none;border-radius:7px;padding:9px 16px;font-family:'Source Sans 3',sans-serif;font-size:.8rem;cursor:pointer;font-weight:600;">💾 Guardar paciente</button>
+        <button onclick="toggleAntecedentes()" id="btn-antecedentes" style="background:var(--navy);color:white;border:none;border-radius:7px;padding:9px 16px;font-family:'Source Sans 3',sans-serif;font-size:.8rem;cursor:pointer;font-weight:600;">🩺 Antecedentes</button>
         <button onclick="limpiarPaciente()" style="background:none;color:var(--muted);border:1.5px solid var(--border);border-radius:7px;padding:9px 16px;font-family:'Source Sans 3',sans-serif;font-size:.8rem;cursor:pointer;">🗑 Limpiar</button>
       </div>
+
+      <!-- Panel de antecedentes del paciente cargado -->
+      <div id="pac-antecedentes-display" style="display:none;margin-top:12px;background:var(--cream2);border-radius:10px;padding:12px 14px;border:1px solid var(--border);font-size:.84rem;"></div>
     </div>
   </div>
 
@@ -1488,39 +1521,114 @@ window.revocarAcceso = async function(id, email) {
 /* ══════════════════════════════════════════
    PACIENTES FRECUENTES
 ══════════════════════════════════════════ */
+function toggleAntecedentes() {
+  const wrap = document.getElementById('antecedentes-wrap');
+  const btn  = document.getElementById('btn-antecedentes');
+  const visible = wrap.style.display !== 'none';
+  wrap.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? '🩺 Antecedentes' : '🩺 Ocultar antecedentes';
+}
+
+function getAntecedentes() {
+  const checks = Array.from(document.querySelectorAll('.antecedente-check:checked')).map(c => c.value);
+  const otros  = document.getElementById('pac-otros-antecedentes').value.trim();
+  if (otros) checks.push(...otros.split(',').map(s => s.trim()).filter(Boolean));
+  return checks;
+}
+
+function setAntecedentes(lista) {
+  // Reset checkboxes
+  document.querySelectorAll('.antecedente-check').forEach(c => c.checked = false);
+  document.getElementById('pac-otros-antecedentes').value = '';
+
+  const checkValues = Array.from(document.querySelectorAll('.antecedente-check')).map(c => c.value);
+  const extras = [];
+  lista.forEach(a => {
+    const el = document.querySelector(`.antecedente-check[value="${a}"]`);
+    if (el) el.checked = true;
+    else extras.push(a);
+  });
+  document.getElementById('pac-otros-antecedentes').value = extras.join(', ');
+}
+
+function mostrarAntecedentesDisplay(data) {
+  const el = document.getElementById('pac-antecedentes-display');
+  if (!data) { el.style.display = 'none'; return; }
+
+  const antecedentes = data.antecedentes || [];
+  const alergias     = data.alergias || '';
+  const medsCronicos = data.medsCronicos || '';
+  const notasMedico  = data.notasMedico || '';
+
+  if (!antecedentes.length && !alergias && !medsCronicos && !notasMedico) {
+    el.style.display = 'none'; return;
+  }
+
+  el.style.display = 'block';
+  el.innerHTML = `
+    ${antecedentes.length ? `<div style="margin-bottom:6px"><strong>🩺 Antecedentes:</strong> ${antecedentes.map(a => `<span style="background:var(--navy);color:white;border-radius:4px;padding:1px 7px;font-size:.75rem;margin:2px;display:inline-block;">${a}</span>`).join('')}</div>` : ''}
+    ${alergias     ? `<div style="margin-bottom:4px;color:#b33;"><strong>⚠️ Alergias:</strong> ${alergias}</div>` : ''}
+    ${medsCronicos ? `<div style="margin-bottom:4px;"><strong>💊 Meds crónicos:</strong> ${medsCronicos}</div>` : ''}
+    ${notasMedico  ? `<div><strong>📝 Notas:</strong> ${notasMedico}</div>` : ''}
+  `;
+}
+
 async function guardarPaciente() {
   const user = firebase.auth().currentUser;
   if (!user) return;
 
-  const nombre = document.getElementById('pac-nombre').value.trim();
-  const fnac   = document.getElementById('pac-fnac').value.trim();
-  const edad   = document.getElementById('pac-edad').value.trim();
+  const nombre      = document.getElementById('pac-nombre').value.trim();
+  const fnac        = document.getElementById('pac-fnac').value.trim();
+  const edad        = document.getElementById('pac-edad').value.trim();
+  const alergias    = document.getElementById('pac-alergias').value.trim();
+  const medsCronicos= document.getElementById('pac-meds-cronicos').value.trim();
+  const notasMedico = document.getElementById('pac-notas-medico').value.trim();
+  const antecedentes= getAntecedentes();
 
   if (!nombre) { mostrarToast('⚠️ Escribe el nombre del paciente primero'); return; }
 
   const db = firebase.firestore();
-  // Verificar si ya existe
   const snap = await db.collection('pacientes')
     .where('uid', '==', user.uid)
     .where('nombre', '==', nombre)
     .get();
 
+  const datos = { nombre, fnac, edad, antecedentes, alergias, medsCronicos, notasMedico, actualizadoEn: firebase.firestore.FieldValue.serverTimestamp() };
+
   if (!snap.empty) {
-    // Actualizar
-    await snap.docs[0].ref.update({ nombre, fnac, edad, actualizadoEn: firebase.firestore.FieldValue.serverTimestamp() });
+    await snap.docs[0].ref.update(datos);
     mostrarToast(`✅ Paciente "${nombre}" actualizado`);
   } else {
-    // Crear nuevo
-    await db.collection('pacientes').add({
-      uid: user.uid,
-      nombre, fnac, edad,
-      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    await db.collection('pacientes').add({ uid: user.uid, ...datos, creadoEn: firebase.firestore.FieldValue.serverTimestamp() });
     mostrarToast(`✅ Paciente "${nombre}" guardado`);
   }
+  mostrarAntecedentesDisplay({ antecedentes, alergias, medsCronicos, notasMedico });
 }
 
-async function buscarPaciente(q) {
+async function cargarPaciente(id) {
+  const db = firebase.firestore();
+  const doc = await db.collection('pacientes').doc(id).get();
+  if (!doc.exists) return;
+  const d = doc.data();
+
+  document.getElementById('pac-nombre').value = d.nombre || '';
+  document.getElementById('pac-fnac').value   = d.fnac   || '';
+  document.getElementById('pac-edad').value   = d.edad   || '';
+  document.getElementById('pac-buscar').value = '';
+  document.getElementById('pac-dropdown').style.display = 'none';
+  document.getElementById('pac-fecha').value  = new Date().toISOString().split('T')[0];
+
+  // Cargar antecedentes
+  document.getElementById('pac-alergias').value     = d.alergias     || '';
+  document.getElementById('pac-meds-cronicos').value = d.medsCronicos || '';
+  document.getElementById('pac-notas-medico').value  = d.notasMedico  || '';
+  if (d.antecedentes) setAntecedentes(d.antecedentes);
+
+  // Mostrar resumen de antecedentes
+  mostrarAntecedentesDisplay(d);
+
+  mostrarToast(`✅ Paciente "${d.nombre}" cargado`);
+}
   const dd = document.getElementById('pac-dropdown');
   if (q.length < 2) { dd.style.display = 'none'; return; }
 
@@ -1564,12 +1672,16 @@ async function cargarPaciente(id) {
 }
 
 function limpiarPaciente() {
-  ['pac-nombre','pac-edad','pac-fnac','pac-dx','pac-buscar'].forEach(id => {
+  ['pac-nombre','pac-edad','pac-fnac','pac-dx','pac-buscar','pac-alergias','pac-meds-cronicos','pac-notas-medico','pac-otros-antecedentes'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  document.querySelectorAll('.antecedente-check').forEach(c => c.checked = false);
   document.getElementById('pac-fecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('pac-dropdown').style.display = 'none';
+  document.getElementById('pac-antecedentes-display').style.display = 'none';
+  document.getElementById('antecedentes-wrap').style.display = 'none';
+  document.getElementById('btn-antecedentes').textContent = '🩺 Antecedentes';
 }
 
 // Cerrar dropdown pacientes al tocar fuera
