@@ -495,7 +495,7 @@ body:has(#overlay.show) .dropdown { display: none !important; }
       <div class="g4">
         <div class="field"><label>Nombre completo</label><input id="pac-nombre" placeholder="Nombre del paciente" /></div>
         <div class="field"><label>Edad</label><input id="pac-edad" placeholder="Se calcula automático" readonly style="background:var(--cream2);color:var(--muted)" /></div>
-        <div class="field"><label>Fecha de nacimiento</label><input id="pac-fnac" type="text" placeholder="Ej. 15/04/1999" /></div>
+        <div class="field"><label>Fecha de nacimiento</label><input id="pac-fnac" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="DD/MM/AAAA" /></div>
         <div class="field"><label>Fecha de receta</label><input id="pac-fecha" type="date" /></div>
       </div>
       <div class="g2" style="margin-top:13px">
