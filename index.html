@@ -1591,6 +1591,15 @@ async function cargarPaciente(id) {
   document.getElementById('pac-dropdown').style.display = 'none';
   document.getElementById('pac-fecha').value  = new Date().toISOString().split('T')[0];
 
+  // Cargar antecedentes
+  document.getElementById('pac-alergias').value      = d.alergias     || '';
+  document.getElementById('pac-meds-cronicos').value = d.medsCronicos || '';
+  document.getElementById('pac-notas-medico').value  = d.notasMedico  || '';
+  if (d.antecedentes && d.antecedentes.length) setAntecedentes(d.antecedentes);
+
+  // Mostrar resumen de antecedentes
+  mostrarAntecedentesDisplay(d);
+
   mostrarToast(`✅ Paciente "${d.nombre}" cargado`);
 }
 
@@ -1976,6 +1985,13 @@ function verReceta() {
   const dx     = document.getElementById('pac-dx').value.trim();
   const numRx  = document.getElementById('num-receta').value || '';
 
+  // Antecedentes del paciente
+  const alergias     = document.getElementById('pac-alergias')?.value.trim() || '';
+  const medsCronicos = document.getElementById('pac-meds-cronicos')?.value.trim() || '';
+  const antecedentes = Array.from(document.querySelectorAll('.antecedente-check:checked')).map(c => c.value);
+  const otrosAnt     = document.getElementById('pac-otros-antecedentes')?.value.trim() || '';
+  if (otrosAnt) antecedentes.push(...otrosAnt.split(',').map(s=>s.trim()).filter(Boolean));
+
   const fmtDate = s => s ? new Date(s+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
 
   // ─── Decide verbo + cantidad según forma farmacéutica ───
@@ -2067,6 +2083,13 @@ function verReceta() {
       <div><span>Fecha de nacimiento:</span><br><strong>${pacFN}</strong></div>
       ${dx ? `<div style="flex-basis:100%"><span>Diagnóstico:</span><br><strong>${escHtml(dx)}</strong></div>` : ''}
     </div>
+
+    ${(antecedentes.length || alergias || medsCronicos) ? `
+    <div style="margin:8px 0;padding:8px 10px;background:#f9f7f2;border-radius:6px;border:1px solid #d4cfc2;font-size:.78rem;">
+      ${antecedentes.length ? `<div><strong>Antecedentes:</strong> ${antecedentes.join(', ')}</div>` : ''}
+      ${alergias ? `<div style="color:#b33;"><strong>Alergias:</strong> ${escHtml(alergias)}</div>` : ''}
+      ${medsCronicos ? `<div><strong>Meds. crónicos:</strong> ${escHtml(medsCronicos)}</div>` : ''}
+    </div>` : ''}
 
     <p class="r-rx-title">Rx — Medicamentos prescritos</p>
 
