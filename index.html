@@ -2191,9 +2191,13 @@ window.generarNumReceta = function generarNumReceta() {
   const mm  = String(fecha.getMonth()+1).padStart(2,'0');
   const dd  = String(fecha.getDate()).padStart(2,'0');
   const rand = String(Math.floor(Math.random()*9000)+1000);
-  document.getElementById('num-receta').value = `RX-${yy}${mm}${dd}-${rand}`;
+  const el = document.getElementById('num-receta');
+  if (el) el.value = `RX-${yy}${mm}${dd}-${rand}`;
 }
-generarNumReceta(); // Generar al cargar
+// Llamar cuando el DOM esté listo y también cuando Firebase autentique
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(generarNumReceta, 500);
+});
 
 /* ══════════════════════════════════════════
    CÁLCULO AUTOMÁTICO DE EDAD
@@ -2355,6 +2359,7 @@ const ADMIN_EMAIL = 'rmirandae14@gmail.com';
     }
 
     await cargarPerfilMedico(user);
+    generarNumReceta();
   }
 
   // ── Cargar perfil del médico desde Firestore ──
