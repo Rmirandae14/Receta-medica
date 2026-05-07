@@ -1542,8 +1542,10 @@ async function cargarPaciente(id) {
 
   mostrarToast(`✅ Paciente "${d.nombre}" cargado`);
 }
-  const dd = document.getElementById('pac-dropdown');
-  if (q.length < 2) { dd.style.display = 'none'; return; }
+
+async function buscarPaciente(q) {
+  const pacDd = document.getElementById('pac-dropdown');
+  if (q.length < 2) { pacDd.style.display = 'none'; return; }
 
   const user = firebase.auth().currentUser;
   if (!user) return;
@@ -1557,15 +1559,15 @@ async function cargarPaciente(id) {
     .limit(6)
     .get();
 
-  if (snap.empty) { dd.style.display = 'none'; return; }
+  if (snap.empty) { pacDd.style.display = 'none'; return; }
 
-  dd.innerHTML = snap.docs.map(doc => {
+  pacDd.innerHTML = snap.docs.map(doc => {
     const d = doc.data();
     return `<div onclick="cargarPaciente('${doc.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.88rem;" onmouseover="this.style.background='var(--cream2)'" onmouseout="this.style.background='white'">
       👤 <strong>${d.nombre}</strong> ${d.fnac ? `· ${d.fnac}` : ''} ${d.edad ? `· ${d.edad}` : ''}
     </div>`;
   }).join('');
-  dd.style.display = 'block';
+  pacDd.style.display = 'block';
 }
 
 async function cargarPaciente(id) {
@@ -1600,8 +1602,8 @@ function limpiarPaciente() {
 // Cerrar dropdown pacientes al tocar fuera
 document.addEventListener('click', e => {
   if (!e.target.closest('#pac-buscar') && !e.target.closest('#pac-dropdown')) {
-    const dd = document.getElementById('pac-dropdown');
-    if (dd) dd.style.display = 'none';
+    const pacDd = document.getElementById('pac-dropdown');
+    if (pacDd) pacDd.style.display = 'none';
   }
 });
 
@@ -2186,13 +2188,13 @@ document.getElementById('pac-fecha').value = new Date().toISOString().split('T')
    NÚMERO DE RECETA AUTOGENERADO
 ══════════════════════════════════════════ */
 window.generarNumReceta = function generarNumReceta() {
-  const fecha = new Date();
-  const yy  = String(fecha.getFullYear()).slice(2);
-  const mm  = String(fecha.getMonth()+1).padStart(2,'0');
-  const dd  = String(fecha.getDate()).padStart(2,'0');
-  const rand = String(Math.floor(Math.random()*9000)+1000);
+  const fechaRx = new Date();
+  const yyRx  = String(fechaRx.getFullYear()).slice(2);
+  const mmRx  = String(fechaRx.getMonth()+1).padStart(2,'0');
+  const ddRx  = String(fechaRx.getDate()).padStart(2,'0');
+  const randRx = String(Math.floor(Math.random()*9000)+1000);
   const el = document.getElementById('num-receta');
-  if (el) el.value = `RX-${yy}${mm}${dd}-${rand}`;
+  if (el) el.value = `RX-${yyRx}${mmRx}${ddRx}-${randRx}`;
 }
 // Llamar después de autenticación en ocultarLogin
 
@@ -2351,14 +2353,14 @@ const ADMIN_EMAIL = 'rmirandae14@gmail.com';
     if (badge) badge.textContent = user.email;
 
     // Generar número de receta inmediatamente
-    const el = document.getElementById('num-receta');
-    if (el && !el.value) {
-      const fecha = new Date();
-      const yy  = String(fecha.getFullYear()).slice(2);
-      const mm  = String(fecha.getMonth()+1).padStart(2,'0');
-      const dd  = String(fecha.getDate()).padStart(2,'0');
-      const rand = String(Math.floor(Math.random()*9000)+1000);
-      el.value = `RX-${yy}${mm}${dd}-${rand}`;
+    const numRecetaEl = document.getElementById('num-receta');
+    if (numRecetaEl && !numRecetaEl.value) {
+      const fechaRx = new Date();
+      const yyRx  = String(fechaRx.getFullYear()).slice(2);
+      const mmRx  = String(fechaRx.getMonth()+1).padStart(2,'0');
+      const ddRx  = String(fechaRx.getDate()).padStart(2,'0');
+      const randRx = String(Math.floor(Math.random()*9000)+1000);
+      numRecetaEl.value = `RX-${yyRx}${mmRx}${ddRx}-${randRx}`;
     }
 
     // Mostrar botón admin si es administrador
